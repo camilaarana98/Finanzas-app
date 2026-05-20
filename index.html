@@ -249,6 +249,8 @@ html,body{
 .ofield input{flex:1;border:none;outline:none;background:transparent;font:600 16px/24px 'Nunito',sans-serif;color:var(--on-surf);padding:13px 0}
 .ofield input::placeholder{color:var(--outline)}
 #ai{font:800 28px/1 'Nunito',sans-serif!important}
+#ai::-webkit-outer-spin-button,#ai::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+#ai{-moz-appearance:textfield}
 /* Segmented */
 .seg{display:flex;border:1.5px solid var(--outline);border-radius:var(--r-full);overflow:hidden}
 .sbtn{
@@ -260,12 +262,14 @@ html,body{
 .sbtn:last-child{border-right:none}
 .sbtn.act{background:var(--sec-c);color:var(--on-sec-c)}
 .sbtn .ms{font-size:17px}
-/* Month chip — inline inside amount field */
+/* Month chip — pill next to amount field */
+.amount-row{display:flex;gap:8px;align-items:stretch;width:100%}
+.amount-row .ofield{flex:1;min-width:0}
 .mon-chip{
-  flex-shrink:0;padding:5px 10px;margin-left:8px;
-  border:1.5px solid var(--outline-v);border-radius:var(--r-full);
-  font:700 11px/14px 'Nunito',sans-serif;color:var(--on-surf-v);
-  background:transparent;cursor:pointer;white-space:nowrap;
+  flex-shrink:0;padding:0 14px;min-width:88px;text-align:center;
+  border:1.5px solid var(--outline-v);border-radius:var(--r-sm);
+  font:700 12px/1 'Nunito',sans-serif;color:var(--on-surf-v);
+  background:var(--surf);cursor:pointer;white-space:nowrap;
   -webkit-tap-highlight-color:transparent;
   transition:background .15s,border-color .15s,color .15s;
 }
@@ -548,7 +552,10 @@ html,body{
 
   <div class="ff">
     <label class="flbl">Monto</label>
-    <div class="ofield"><span class="pfx">S/</span><input id="ai" type="number" inputmode="decimal" placeholder="0.00" step="0.01" min="0" autocomplete="off"><button class="mon-chip" id="mon-chip" onclick="cycleMon()">Este mes</button></div>
+    <div class="amount-row">
+      <div class="ofield"><span class="pfx">S/</span><input id="ai" type="number" inputmode="decimal" placeholder="0.00" step="0.01" min="0" autocomplete="off"></div>
+      <button class="mon-chip" id="mon-chip" onclick="cycleMon()">Este mes</button>
+    </div>
   </div>
 
   <div class="ff" id="date-ff" style="display:none">
