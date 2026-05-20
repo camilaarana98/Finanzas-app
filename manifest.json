@@ -1,0 +1,18 @@
+{
+  "name": "Mis Finanzas",
+  "short_name": "Finanzas",
+  "description": "App de finanzas personales",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#FFF5FE",
+  "theme_color": "#BF7587",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
