@@ -1,1478 +1,468 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#FAF8F6">
-<title>Mis Finanzas</title>
-<script>const GAS_URL="https://script.google.com/macros/s/AKfycbx5tv9NdzCwSXiAWW-AU_35Ml2Vp0dlwQUAJGoPf9zcbHFel4eY3kpE0JL14jm5I8xGsQ/exec";</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0">
-<style>
-:root{
-  --pri:        #E68057;
-  --pri-c:      #FDEEE5;
-  --on-pri-c:   #4A1A00;
-  --sec:        #BF7587;
-  --sec-c:      #F5DEE4;
-  --on-sec-c:   #3A0C18;
-  --ter:        #993A8B;
-  --ter-c:      #F0D6EE;
-  --on-ter-c:   #2D0029;
-  --rust:       #A2574F;
-  --err:        #BA1A1A;
-  --err-c:      #FFDAD6;
-  --bg:         #FAF8F6;
-  --surf:       #FFFFFF;
-  --surf-low:   #FBF5F0;
-  --surf-hi:    #F0E8E3;
-  --on-surf:    #1A1412;
-  --on-surf-v:  #5C4A45;
-  --outline:    #D4C4BC;
-  --outline-v:  #EDE5E0;
-  --inv-surf:   #2D2018;
-  --safe-b:env(safe-area-inset-bottom,0px);
-  --safe-t:env(safe-area-inset-top,0px);
-  --r:12px; --r-sm:8px; --r-lg:16px; --r-xl:28px; --r-full:50px;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{
-  background:var(--bg);color:var(--on-surf);
-  font-family:'Nunito',sans-serif;min-height:100dvh;
-  -webkit-font-smoothing:antialiased;overscroll-behavior:none;
-}
-.ms{
-  font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;
-  line-height:1;letter-spacing:normal;text-transform:none;white-space:nowrap;
-  direction:ltr;-webkit-font-smoothing:antialiased;
-  font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;
-  user-select:none;vertical-align:middle;display:inline-block;
-}
-/* Lock screen */
-#lock{position:fixed;inset:0;background:rgba(245,222,228,.30);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;transition:opacity .3s}
-#lock.h{opacity:0;pointer-events:none}
-.pin-title{font:800 26px/32px 'Nunito',sans-serif;color:var(--on-sec-c);margin-bottom:6px;margin-top:16px}
-.pin-sub{font:500 14px/20px 'Nunito',sans-serif;color:var(--on-sec-c);opacity:.65;margin-bottom:44px;text-align:center}
-.pin-dots{display:flex;gap:18px;margin-bottom:52px}
-.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--sec);background:transparent;transition:background .12s,border-color .12s}
-.pin-dot.fill{background:var(--sec)}
-.pin-dot.err{border-color:var(--err)!important;background:var(--err)!important}
-.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:252px}
-.pin-btn{
-  width:76px;height:76px;border-radius:50%;border:none;
-  background:rgba(255,255,255,.55);backdrop-filter:blur(4px);
-  font:700 26px/1 'Nunito',sans-serif;color:var(--on-sec-c);
-  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s;
-  display:flex;align-items:center;justify-content:center;
-}
-.pin-btn:active{background:rgba(255,255,255,.85)}
-.pin-btn.del{background:transparent}
-@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
-.pin-dots.shake{animation:shake .4s ease}
-/* Loading */
-#ls{position:fixed;inset:0;background:var(--surf-low);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:1000;transition:opacity .3s}
-#ls.h{opacity:0;pointer-events:none}
-.spin{width:40px;height:40px;border:3px solid var(--outline-v);border-top-color:var(--sec);border-radius:50%;animation:rot .9s linear infinite}
-@keyframes rot{to{transform:rotate(360deg)}}
-/* Error */
-#es{display:none;position:fixed;inset:0;background:var(--surf-low);flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;gap:12px}
-#es.v{display:flex}
-/* App */
-#app{max-width:480px;margin:0 auto;opacity:1;padding-bottom:calc(32px + var(--safe-b));min-height:100dvh}
-.page{display:none}.page.act{display:block}
-/* Top bar */
-.bar{
-  position:sticky;top:0;z-index:10;background:var(--bg);
-  padding:calc(var(--safe-t) + 4px) 4px 4px 20px;
-  height:calc(64px + var(--safe-t));
-  display:flex;align-items:center;gap:4px;
-  border-bottom:1px solid transparent;transition:border-color .2s;
-}
-.bar.sc{border-bottom-color:var(--outline-v)}
-.bar-titles{flex:1}
-.bar-month{font:800 22px/28px 'Nunito',sans-serif;color:var(--on-surf);display:block}
-.bar-year{font:600 13px/16px 'Nunito',sans-serif;color:var(--on-surf-v);display:block;margin-top:-1px}
-.ibtn{
-  width:48px;height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  border:none;background:transparent;border-radius:var(--r-full);cursor:pointer;
-  color:var(--on-surf-v);-webkit-tap-highlight-color:transparent;transition:background .15s;
-}
-.ibtn:active{background:rgba(0,0,0,.08)}
-.ibtn.spinning .ms{animation:rot .7s linear infinite}
-/* Hero — pinks as primary */
-.hero{margin:12px 16px;background:var(--sec-c);border-radius:var(--r-xl);padding:20px;border:1px solid #E8C4D4}
-.hero-lbl{font:600 10px/14px 'Nunito',sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--on-sec-c);opacity:.7;margin-bottom:4px}
-.hero-amt{font:800 42px/1 'Nunito',sans-serif;letter-spacing:-.02em;color:var(--on-sec-c);margin-bottom:16px;transition:color .3s}
-.hero-amt.neg{color:var(--err)}
-.hero-amt.warn{color:#7A3040}
-.prog-lbls{display:flex;justify-content:space-between;font:600 10px/14px 'Nunito',sans-serif;color:var(--on-sec-c);opacity:.7;margin-bottom:6px}
-.prog{height:7px;background:rgba(0,0,0,.1);border-radius:var(--r-full);overflow:hidden}
-.prog-fill{height:100%;background:var(--sec);border-radius:var(--r-full);transition:width .8s cubic-bezier(.16,1,.3,1),background .3s;max-width:100%}
-.prog-fill.warn{background:#8B3050}
-.prog-fill.danger{background:var(--err)}
-.hero-sub{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
-.hero-chip{background:rgba(255,255,255,.5);border-radius:var(--r-sm);padding:8px 12px;border:1px solid rgba(255,255,255,.6)}
-.hero-chip .lbl{font:600 10px/14px 'Nunito',sans-serif;color:var(--on-sec-c);opacity:.7;display:block;margin-bottom:2px}
-.hero-chip .val{font:700 15px/1 'Nunito',sans-serif;color:var(--on-sec-c)}
-/* Section */
-.sec{padding:0 16px 8px}
-.sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 0 6px}
-.sec-title{font:700 10px/14px 'Nunito',sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--on-surf-v)}
-.sec-trail{font:700 14px/20px 'Nunito',sans-serif;color:var(--on-surf)}
-/* Card */
-.card{background:var(--surf);border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--outline-v)}
-/* Summary strip */
-.sum-strip{display:flex;gap:8px}
-.sum-chip{
-  flex:1;min-width:0;background:var(--surf);border:1px solid var(--outline-v);
-  border-radius:var(--r);padding:10px 12px;position:relative;overflow:hidden;
-}
-.sum-chip.ed{cursor:pointer;-webkit-tap-highlight-color:transparent}
-.sum-chip.ed:active{background:var(--surf-low)}
-.sum-lbl{font:600 10px/14px 'Nunito',sans-serif;color:var(--on-surf-v);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:3px}
-.sum-val{font:800 14px/20px 'Nunito',sans-serif;color:var(--on-surf);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sum-val.inc{color:#2E7D32}
-.sum-val.sav{color:var(--ter)}
-.sum-edit{position:absolute;top:6px;right:6px;font-size:13px;color:var(--on-surf-v);opacity:.4}
-/* List item */
-.li{display:flex;align-items:center;padding:12px 16px;gap:16px;min-height:56px;border-bottom:1px solid var(--outline-v);background:var(--surf)}
-.li:last-child{border-bottom:none}
-.li-icon{width:38px;height:38px;flex-shrink:0;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center}
-.li-icon .ms{font-size:20px}
-.li-cnt{flex:1;min-width:0}
-.li-hl{font:600 15px/22px 'Nunito',sans-serif;color:var(--on-surf);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.li-sub{font:500 12px/16px 'Nunito',sans-serif;color:var(--on-surf-v);margin-top:1px}
-.li-trail{font:700 14px/20px 'Nunito',sans-serif;color:var(--on-surf);white-space:nowrap}
-.li-trail.neg{color:var(--err)}
-.li-trail.sav{color:var(--ter)}
-.li-trail.inc{color:#2E7D32}
-/* Fixed row */
-.fr{display:flex;align-items:center;padding:10px 16px 10px 72px;gap:12px;border-bottom:1px solid var(--outline-v);background:var(--surf)}
-.fr:last-child{border-bottom:none}
-.fr-name{flex:1;font:500 14px/20px 'Nunito',sans-serif;color:var(--on-surf)}
-.fr-amt{font:600 14px/20px 'Nunito',sans-serif;color:var(--on-surf);white-space:nowrap}
-.paid-btn{width:32px;height:32px;flex-shrink:0;border:none;background:transparent;border-radius:var(--r-full);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.paid-btn:active{background:rgba(0,0,0,.06)}
-.paid-btn .ms{font-size:22px}
-/* Paid tag */
-.paid-tag{
-  font:700 11px/14px 'Nunito',sans-serif;
-  padding:3px 8px;border-radius:var(--r-full);
-  white-space:nowrap;flex-shrink:0;
-  background:var(--outline-v);color:var(--on-surf-v);
-}
-.paid-tag.done{background:#D7EED8;color:#1B5E20}
-.paid-tag.some{background:var(--sec-c);color:var(--on-sec-c)}
-/* Expandable */
-.exp-hdr{
-  display:flex;align-items:center;padding:12px 16px;gap:12px;min-height:56px;
-  border-bottom:1px solid var(--outline-v);cursor:pointer;user-select:none;
-  background:var(--surf);-webkit-tap-highlight-color:transparent;transition:background .15s;
-}
-.exp-hdr:active{background:var(--surf-low)}
-.exp-hdr.open .exp-ico{transform:rotate(180deg)}
-.exp-ico{color:var(--on-surf-v);transition:transform .25s;font-size:20px;flex-shrink:0}
-.exp-body{display:none}
-.exp-body.open{display:block}
-/* Transaction */
-.txn-w{position:relative;border-bottom:1px solid var(--outline-v)}
-.txn-w:last-child{border-bottom:none}
-.txn{display:flex;align-items:center;padding:12px 16px;gap:14px;min-height:64px;background:var(--surf);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.txn:active{background:var(--surf-low)}
-.txn-del{
-  display:none;width:34px;height:34px;flex-shrink:0;
-  border:none;background:transparent;border-radius:var(--r-full);
-  align-items:center;justify-content:center;
-  color:var(--err);cursor:pointer;-webkit-tap-highlight-color:transparent;
-}
-.txn-del .ms{font-size:20px}
-.txn-w.sd .txn-del{display:flex}
-.txn-edit{
-  display:none;width:34px;height:34px;flex-shrink:0;
-  border:none;background:transparent;border-radius:var(--r-full);
-  align-items:center;justify-content:center;
-  color:var(--ter);cursor:pointer;-webkit-tap-highlight-color:transparent;
-}
-.txn-edit .ms{font-size:20px}
-.txn-w.sd .txn-edit{display:flex}
-/* Nuevo gasto button — orange accent */
-.new-btn{
-  display:flex;align-items:center;gap:4px;
-  padding:6px 12px;background:var(--pri-c);
-  border:1px solid #F5D8C8;border-radius:var(--r-full);
-  font:700 12px/20px 'Nunito',sans-serif;color:var(--on-pri-c);
-  cursor:pointer;-webkit-tap-highlight-color:transparent;
-  transition:background .15s;
-}
-.new-btn:active{background:#F5D8C8}
-.new-btn .ms{font-size:16px}
-/* Empty */
-.empty{padding:36px 16px;text-align:center;color:var(--on-surf-v)}
-.empty .ms{font-size:44px;opacity:.3;display:block;margin-bottom:10px}
-.empty p{font:500 14px/20px 'Nunito',sans-serif}
-/* Month chips */
-.mchips{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 12px;scrollbar-width:none}
-.mchips::-webkit-scrollbar{display:none}
-.mchip{
-  padding:6px 16px;flex-shrink:0;border:1px solid var(--outline);border-radius:var(--r-full);
-  background:transparent;font:600 13px/20px 'Nunito',sans-serif;color:var(--on-surf-v);
-  cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;
-}
-.mchip.sel{background:var(--sec-c);border-color:transparent;color:var(--on-sec-c)}
-/* Scrim */
-.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;opacity:0;pointer-events:none;transition:opacity .3s}
-.scrim.v{opacity:1;pointer-events:all}
-/* Bottom sheet */
-.bsheet{
-  position:fixed;bottom:0;background:var(--surf-low);border-radius:28px 28px 0 0;
-  padding:0 24px calc(24px + var(--safe-b));z-index:400;
-  width:100%;max-width:480px;left:50%;transform:translateX(-50%) translateY(100%);
-  transition:transform .35s cubic-bezier(.05,.7,.1,1);max-height:90dvh;overflow-y:auto;
-}
-.bsheet.open{transform:translateX(-50%) translateY(0)}
-@media(max-width:480px){.bsheet{left:0;right:0;transform:translateY(100%);width:auto}.bsheet.open{transform:translateY(0)}}
-.bhandle{width:32px;height:4px;background:var(--outline);border-radius:99px;margin:12px auto 20px;opacity:.5}
-.btitle{font:800 20px/28px 'Nunito',sans-serif;color:var(--on-surf);margin-bottom:20px}
-/* Form */
-.ff{margin-bottom:14px}
-.flbl{display:block;font:700 11px/16px 'Nunito',sans-serif;letter-spacing:.04em;color:var(--on-surf-v);margin-bottom:6px}
-.ofield{
-  display:flex;align-items:center;
-  border:1.5px solid var(--outline);border-radius:var(--r-sm);
-  background:var(--surf);padding:0 16px;transition:border-color .2s;
-}
-.ofield:focus-within{border-color:var(--sec)}
-.ofield .pfx{font:800 20px/1 'Nunito',sans-serif;color:var(--on-surf-v);margin-right:8px;flex-shrink:0}
-.ofield input{flex:1;border:none;outline:none;background:transparent;font:600 16px/24px 'Nunito',sans-serif;color:var(--on-surf);padding:13px 0}
-.ofield input::placeholder{color:var(--outline)}
-#ai{font:800 28px/1 'Nunito',sans-serif!important}
-/* Segmented */
-.seg{display:flex;border:1.5px solid var(--outline);border-radius:var(--r-full);overflow:hidden}
-.sbtn{
-  flex:1;padding:10px 12px;border:none;background:transparent;
-  font:700 13px/20px 'Nunito',sans-serif;color:var(--on-surf);
-  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
-  border-right:1.5px solid var(--outline);-webkit-tap-highlight-color:transparent;
-}
-.sbtn:last-child{border-right:none}
-.sbtn.act{background:var(--sec-c);color:var(--on-sec-c)}
-.sbtn .ms{font-size:17px}
-/* Month selector in form */
-.msel{display:flex;gap:6px}
-.mselbtn{
-  flex:1;padding:9px 4px;border:1.5px solid var(--outline-v);border-radius:var(--r-full);
-  font:600 12px/16px 'Nunito',sans-serif;color:var(--on-surf-v);background:var(--surf);
-  cursor:pointer;white-space:nowrap;text-align:center;-webkit-tap-highlight-color:transparent;
-  transition:background .15s,border-color .15s,color .15s;
-}
-.mselbtn.act{background:var(--sec-c);border-color:var(--sec);color:var(--on-sec-c);font-weight:700}
-/* Cat grid */
-.cgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.cchip{
-  display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;
-  border:1.5px solid var(--outline-v);border-radius:var(--r);background:transparent;
-  cursor:pointer;-webkit-tap-highlight-color:transparent;
-}
-.cchip .em{font-size:20px}
-.cchip .cl{font:600 10px/14px 'Nunito',sans-serif;color:var(--on-surf-v);text-align:center}
-.cchip.sel{background:var(--sec-c);border-color:var(--sec)}
-.cchip.sel .cl{color:var(--on-sec-c)}
-/* Filled btn — orange primary action */
-.fbtn{
-  width:100%;padding:14px;background:var(--pri);color:#fff;
-  border:none;border-radius:var(--r-full);font:800 15px/20px 'Nunito',sans-serif;
-  cursor:pointer;min-height:54px;display:flex;align-items:center;justify-content:center;gap:8px;
-  -webkit-tap-highlight-color:transparent;margin-top:8px;transition:opacity .2s;
-}
-.fbtn:disabled{opacity:.4;cursor:not-allowed}
-.fbtn.ld{background:var(--surf-hi);color:var(--on-surf-v)}
-/* Dialog */
-.dscrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;display:none;align-items:center;justify-content:center;padding:24px}
-.dscrim.v{display:flex}
-.dlg{background:var(--surf);border:1px solid var(--outline-v);border-radius:24px;padding:24px;width:100%;max-width:320px}
-.dtitle{font:800 20px/28px 'Nunito',sans-serif;color:var(--on-surf);margin-bottom:14px}
-.dbody{font:500 14px/20px 'Nunito',sans-serif;color:var(--on-surf-v);margin-bottom:22px}
-.dact{display:flex;justify-content:flex-end;gap:8px}
-.tbtn{padding:10px 12px;border:none;background:transparent;border-radius:var(--r-full);font:700 14px/20px 'Nunito',sans-serif;color:var(--pri);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.tbtn.er{color:var(--err)}
-/* Snackbar */
-.snack{
-  position:fixed;bottom:calc(24px + var(--safe-b));left:50%;
-  transform:translateX(-50%) translateY(16px);
-  background:var(--inv-surf);color:#fff;
-  padding:12px 22px;border-radius:var(--r-sm);
-  font:600 14px/20px 'Nunito',sans-serif;
-  z-index:1000;opacity:0;transition:opacity .25s,transform .25s;
-  pointer-events:none;white-space:nowrap;
-}
-.snack.sh{opacity:1;transform:translateX(-50%) translateY(0)}
-.div{height:1px;background:var(--outline-v)}
-/* Fijo manager list */
-.fj-item{display:flex;align-items:center;padding:12px 14px;gap:10px;border-bottom:1px solid var(--outline-v);background:var(--surf)}
-.fj-item:last-child{border-bottom:none}
-.fj-badge{font:700 10px/14px 'Nunito',sans-serif;padding:2px 8px;border-radius:var(--r-full);flex-shrink:0}
-.fj-badge.man{background:#FFF0E8;color:var(--rust)}
-.fj-badge.deb{background:#FFEBEE;color:#C62828}
-/* Count badge */
-.cnt-badge{font:700 11px/14px 'Nunito',sans-serif;padding:2px 7px;border-radius:var(--r-full);background:var(--sec-c);color:var(--on-sec-c);flex-shrink:0}
-.cnt-badge:empty{display:none}
-/* Other-month badge on txn */
-.txn-badge{
-  font:600 10px/14px 'Nunito',sans-serif;padding:2px 7px;
-  border-radius:var(--r-full);background:var(--pri-c);color:var(--on-pri-c);
-  flex-shrink:0;border:1px solid #F5D8C8;
-}
-</style>
-</head>
-<body>
+// ============================================================
+//  FINANZAS PERSONALES — Google Apps Script v3
+//  Pega este código en Extensiones > Apps Script de tu Sheet
+// ============================================================
 
-<div id="lock">
-  <span class="ms" style="font-size:52px;color:var(--sec)">lock</span>
-  <p class="pin-title">Mis Finanzas</p>
-  <p class="pin-sub">Ingresa tu PIN para continuar</p>
-  <div class="pin-dots" id="pin-dots">
-    <div class="pin-dot" id="pd0"></div>
-    <div class="pin-dot" id="pd1"></div>
-    <div class="pin-dot" id="pd2"></div>
-    <div class="pin-dot" id="pd3"></div>
-  </div>
-  <div class="pin-pad">
-    <button class="pin-btn" onclick="pinKey('1')">1</button>
-    <button class="pin-btn" onclick="pinKey('2')">2</button>
-    <button class="pin-btn" onclick="pinKey('3')">3</button>
-    <button class="pin-btn" onclick="pinKey('4')">4</button>
-    <button class="pin-btn" onclick="pinKey('5')">5</button>
-    <button class="pin-btn" onclick="pinKey('6')">6</button>
-    <button class="pin-btn" onclick="pinKey('7')">7</button>
-    <button class="pin-btn" onclick="pinKey('8')">8</button>
-    <button class="pin-btn" onclick="pinKey('9')">9</button>
-    <div></div>
-    <button class="pin-btn" onclick="pinKey('0')">0</button>
-    <button class="pin-btn del" onclick="pinDel()"><span class="ms" style="font-size:26px">backspace</span></button>
-  </div>
-</div>
+const SHEET_CONFIG    = "Configuración";
+const SHEET_HISTORIAL = "Historial";
+const SHEET_CFG_MES   = "Config Mensual";   // creada automáticamente al primer uso
 
-<div id="ls"><div class="spin"></div><p style="font:600 13px/20px Nunito,sans-serif;color:var(--on-surf-v)">Cargando…</p></div>
-<div id="es">
-  <span class="ms" style="font-size:56px;color:var(--err);margin-bottom:8px">cloud_off</span>
-  <p style="font:800 20px/28px Nunito,sans-serif;margin-bottom:8px">Sin conexión</p>
-  <p style="font:500 14px/20px Nunito,sans-serif;color:var(--on-surf-v);max-width:260px;margin-bottom:22px" id="em"></p>
-  <button class="fbtn" style="width:auto;padding:12px 24px" onclick="loadData()"><span class="ms">refresh</span>Reintentar</button>
-</div>
-
-<div id="app">
-
-<!-- ══ INICIO ══════════════════════════════════════════════════ -->
-<div class="page act" id="pi">
-  <div class="bar" id="top-bar">
-    <div class="bar-titles">
-      <span class="bar-month" id="month-lbl">—</span>
-      <span class="bar-year" id="year-lbl"></span>
-    </div>
-    <button class="ibtn" onclick="goHistory()" aria-label="Historial"><span class="ms">calendar_month</span></button>
-    <button class="ibtn" id="rbtn" onclick="loadData()" aria-label="Actualizar"><span class="ms" id="ric">refresh</span></button>
-  </div>
-
-  <div class="hero">
-    <p class="hero-lbl">Saldo restante</p>
-    <p class="hero-amt" id="ha">S/ 0.00</p>
-    <div class="prog-lbls"><span>Del disponible</span><span id="pct">0% usado</span></div>
-    <div class="prog"><div class="prog-fill" id="pf" style="width:0%"></div></div>
-    <div class="hero-sub">
-      <div class="hero-chip"><span class="lbl">Disponible</span><span class="val" id="sd">S/ 0.00</span></div>
-      <div class="hero-chip"><span class="lbl">Gastado</span><span class="val" id="tv">S/ 0.00</span></div>
-    </div>
-  </div>
-
-  <div class="sec">
-    <div class="sec-hdr"><span class="sec-title">Resumen del mes</span></div>
-    <div class="sum-strip" id="i-sum"></div>
-  </div>
-
-  <div class="sec">
-    <div class="card">
-      <div class="exp-hdr" id="hdr-i-aho" onclick="tog('hdr-i-aho','body-i-aho')">
-        <div class="li-icon" style="background:var(--ter-c)"><span class="ms" style="color:var(--ter)">savings</span></div>
-        <div class="li-cnt">
-          <p class="li-hl">Desde ahorros</p>
-          <p class="li-sub" id="i-aho-sub">S/ 0.00</p>
-        </div>
-        <span class="cnt-badge" id="i-aho-cnt"></span>
-        <span class="ms exp-ico">expand_more</span>
-      </div>
-      <div class="exp-body" id="body-i-aho"></div>
-    </div>
-  </div>
-
-  <div class="sec">
-    <div class="sec-hdr">
-      <span class="sec-title">Gastos fijos</span>
-      <div style="display:flex;align-items:center;gap:2px">
-        <span class="sec-trail" id="i-tfijos">S/ 0.00</span>
-        <button class="ibtn" style="width:34px;height:34px" onclick="openFijosManager()" aria-label="Configurar gastos fijos"><span class="ms" style="font-size:18px;color:var(--on-surf-v)">tune</span></button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="exp-hdr" id="hdr-i-man" onclick="tog('hdr-i-man','body-i-man')">
-        <div class="li-icon" style="background:#FFF0E8"><span class="ms" style="color:var(--rust)">receipt_long</span></div>
-        <div class="li-cnt">
-          <p class="li-hl">Pago manual</p>
-          <p class="li-sub" id="i-tman">S/ 0.00</p>
-        </div>
-        <span class="paid-tag" id="ptag-i-man"></span>
-        <span class="ms exp-ico">expand_more</span>
-      </div>
-      <div class="exp-body" id="body-i-man"></div>
-      <div class="div"></div>
-      <div class="exp-hdr" id="hdr-i-deb" onclick="tog('hdr-i-deb','body-i-deb')">
-        <div class="li-icon" style="background:#FFEBEE"><span class="ms" style="color:#C62828">credit_card</span></div>
-        <div class="li-cnt">
-          <p class="li-hl">Débito automático</p>
-          <p class="li-sub" id="i-tdeb">S/ 0.00</p>
-        </div>
-        <span class="ms exp-ico">expand_more</span>
-      </div>
-      <div class="exp-body" id="body-i-deb"></div>
-    </div>
-  </div>
-
-  <div class="sec">
-    <div class="sec-hdr">
-      <div style="display:flex;align-items:center;gap:6px">
-        <span class="sec-title">Gastos del mes</span>
-        <span class="cnt-badge" id="i-txn-cnt"></span>
-      </div>
-      <button class="new-btn" onclick="openForm()"><span class="ms">add</span>Nuevo gasto</button>
-    </div>
-    <div class="card" id="i-txns"></div>
-  </div>
-</div>
-
-<!-- ══ HISTORIAL ═══════════════════════════════════════════════ -->
-<div class="page" id="ph">
-  <div class="bar">
-    <button class="ibtn" onclick="goBack()"><span class="ms">arrow_back</span></button>
-    <div class="bar-titles">
-      <span class="bar-month" id="h-month-lbl" style="font-size:18px">Historial</span>
-      <span class="bar-year" id="h-year-lbl"></span>
-    </div>
-  </div>
-
-  <div class="mchips" id="mchips"><span style="font:500 13px/20px Nunito,sans-serif;color:var(--on-surf-v)">Cargando…</span></div>
-
-  <div id="h-content" style="display:none">
-    <div class="hero">
-      <p class="hero-lbl">Saldo restante</p>
-      <p class="hero-amt" id="h-ha">S/ 0.00</p>
-      <div class="prog-lbls"><span>Del disponible</span><span id="h-pct">0%</span></div>
-      <div class="prog"><div class="prog-fill" id="h-pf" style="width:0%"></div></div>
-      <div class="hero-sub">
-        <div class="hero-chip"><span class="lbl">Disponible</span><span class="val" id="h-sd">S/ 0.00</span></div>
-        <div class="hero-chip"><span class="lbl">Gastado</span><span class="val" id="h-tv">S/ 0.00</span></div>
-      </div>
-    </div>
-
-    <div class="sec">
-      <div class="sec-hdr"><span class="sec-title">Resumen</span></div>
-      <div class="sum-strip" id="h-sum"></div>
-    </div>
-
-    <div class="sec">
-      <div class="card">
-        <div class="exp-hdr" id="hdr-h-aho" onclick="tog('hdr-h-aho','body-h-aho')">
-          <div class="li-icon" style="background:var(--ter-c)"><span class="ms" style="color:var(--ter)">savings</span></div>
-          <div class="li-cnt"><p class="li-hl">Desde ahorros</p><p class="li-sub" id="h-aho-sub">S/ 0.00</p></div>
-          <span class="cnt-badge" id="h-aho-cnt"></span>
-          <span class="ms exp-ico">expand_more</span>
-        </div>
-        <div class="exp-body" id="body-h-aho"></div>
-      </div>
-    </div>
-
-    <div class="sec">
-      <div class="sec-hdr">
-        <span class="sec-title">Gastos fijos</span>
-        <div style="display:flex;align-items:center;gap:2px">
-          <span class="sec-trail" id="h-tfijos">S/ 0.00</span>
-          <button class="ibtn" style="width:34px;height:34px" onclick="openFijosManager()" aria-label="Configurar gastos fijos"><span class="ms" style="font-size:18px;color:var(--on-surf-v)">tune</span></button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="exp-hdr" id="hdr-h-man" onclick="tog('hdr-h-man','body-h-man')">
-          <div class="li-icon" style="background:#FFF0E8"><span class="ms" style="color:var(--rust)">receipt_long</span></div>
-          <div class="li-cnt"><p class="li-hl">Pago manual</p><p class="li-sub" id="h-tman">S/ 0.00</p></div>
-          <span class="paid-tag" id="ptag-h-man"></span>
-          <span class="ms exp-ico">expand_more</span>
-        </div>
-        <div class="exp-body" id="body-h-man"></div>
-        <div class="div"></div>
-        <div class="exp-hdr" id="hdr-h-deb" onclick="tog('hdr-h-deb','body-h-deb')">
-          <div class="li-icon" style="background:#FFEBEE"><span class="ms" style="color:#C62828">credit_card</span></div>
-          <div class="li-cnt"><p class="li-hl">Débito automático</p><p class="li-sub" id="h-tdeb">S/ 0.00</p></div>
-          <span class="ms exp-ico">expand_more</span>
-        </div>
-        <div class="exp-body" id="body-h-deb"></div>
-      </div>
-    </div>
-
-    <div class="sec">
-      <div class="sec-hdr">
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="sec-title">Gastos del mes</span>
-          <span class="cnt-badge" id="h-txn-cnt"></span>
-        </div>
-        <button class="new-btn" onclick="openForm()"><span class="ms">add</span>Nuevo gasto</button>
-      </div>
-      <div class="card" id="h-txns"></div>
-    </div>
-  </div>
-
-  <div id="h-ph" class="empty" style="margin-top:32px">
-    <span class="ms">calendar_month</span>
-    <p>Selecciona un mes</p>
-  </div>
-</div>
-
-</div><!-- #app -->
-
-<div class="scrim" id="scrim" onclick="closeForm()"></div>
-
-<!-- Bottom sheet form -->
-<div class="bsheet" id="fsheet">
-  <div class="bhandle"></div>
-  <p class="btitle" id="ftitle">Nuevo gasto</p>
-
-  <div class="ff">
-    <label class="flbl">Monto</label>
-    <div class="ofield"><span class="pfx">S/</span><input id="ai" type="number" inputmode="decimal" placeholder="0.00" step="0.01" min="0" autocomplete="off"></div>
-  </div>
-
-  <!-- Month selector — only shown from inicio -->
-  <div class="ff" id="month-ff">
-    <label class="flbl">Mes del gasto</label>
-    <div class="msel" id="msel">
-      <button class="mselbtn" data-mo="-1" onclick="setFMon(-1)" id="msel-p">—</button>
-      <button class="mselbtn act" data-mo="0" onclick="setFMon(0)" id="msel-c">Este mes</button>
-      <button class="mselbtn" data-mo="1" onclick="setFMon(1)" id="msel-n">—</button>
-    </div>
-  </div>
-
-  <div class="ff" id="date-ff" style="display:none">
-    <label class="flbl">Fecha</label>
-    <div class="ofield"><input id="di" type="date" style="padding:13px 0;font:600 16px/24px Nunito,sans-serif;color:var(--on-surf)"></div>
-  </div>
-
-  <div class="ff">
-    <label class="flbl">Descripción (opcional)</label>
-    <div class="ofield"><input id="desc" type="text" placeholder="¿En qué gastaste?" maxlength="60" autocomplete="off"></div>
-  </div>
-  <div class="ff">
-    <label class="flbl">Tipo</label>
-    <div class="seg">
-      <button class="sbtn act" data-tipo="Variable" onclick="setTipo('Variable')"><span class="ms">trending_down</span>Saldo</button>
-      <button class="sbtn" data-tipo="Ahorros" onclick="setTipo('Ahorros')"><span class="ms">savings</span>Ahorros</button>
-    </div>
-  </div>
-  <div class="ff">
-    <label class="flbl">Categoría</label>
-    <div class="cgrid" id="cgrid"></div>
-  </div>
-  <button class="fbtn" id="sbtn" onclick="submit()"><span class="ms">add_circle</span><span id="slbl">Registrar gasto</span></button>
-</div>
-
-<!-- Delete dialog (shared: transactions + fijos) -->
-<div class="dscrim" id="ddlg">
-  <div class="dlg">
-    <p class="dtitle" id="ddlg-title">¿Eliminar gasto?</p>
-    <p class="dbody" id="dbody"></p>
-    <div class="dact">
-      <button class="tbtn" onclick="closeDel()">Cancelar</button>
-      <button class="tbtn er" onclick="confirmDel()">Eliminar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Fijos manager scrim + sheet -->
-<div class="scrim" id="fjscrim" style="z-index:315" onclick="closeFijosManager()"></div>
-<div class="bsheet" id="fjsheet" style="z-index:420;max-height:85dvh">
-  <div class="bhandle"></div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-    <p class="btitle" style="margin-bottom:0">Gastos fijos</p>
-    <button class="new-btn" onclick="openFijoForm(null)"><span class="ms">add</span>Agregar</button>
-  </div>
-  <p style="font:500 12px/18px 'Nunito',sans-serif;color:var(--on-surf-v);margin-bottom:16px">Los cambios se aplican por defecto a todos los meses futuros.</p>
-  <div class="card" id="fj-list"></div>
-</div>
-
-<!-- Fijo add/edit dialog -->
-<div class="dscrim" id="fjdlg" style="z-index:530">
-  <div class="dlg">
-    <p class="dtitle" id="fj-dlg-title">Nuevo gasto fijo</p>
-    <div class="ff">
-      <label class="flbl">Nombre</label>
-      <div class="ofield"><input id="fj-nombre" type="text" placeholder="Ej: Alquiler" maxlength="50" autocomplete="off"></div>
-    </div>
-    <div class="ff">
-      <label class="flbl">Monto mensual</label>
-      <div class="ofield"><span class="pfx">S/</span><input id="fj-monto" type="number" inputmode="decimal" step="0.01" min="0"></div>
-    </div>
-    <div class="ff" style="margin-bottom:4px">
-      <label class="flbl">Tipo</label>
-      <div class="seg">
-        <button class="sbtn act" data-ftipo="Manual" onclick="setFTipo('Manual')"><span class="ms">receipt_long</span>Manual</button>
-        <button class="sbtn" data-ftipo="Débito" onclick="setFTipo('Débito')"><span class="ms">credit_card</span>Débito</button>
-      </div>
-    </div>
-    <div class="dact">
-      <button class="tbtn" onclick="closeFijoDlg()">Cancelar</button>
-      <button class="tbtn" id="fj-save-btn" onclick="confirmFijo()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Edit transaction scrim + sheet -->
-<div class="scrim" id="etscrim" onclick="closeEditTxn()"></div>
-<div class="bsheet" id="etsheet" style="z-index:410">
-  <div class="bhandle"></div>
-  <p class="btitle">Editar gasto</p>
-  <div class="ff">
-    <label class="flbl">Monto</label>
-    <div class="ofield"><span class="pfx">S/</span><input id="etamt" type="number" inputmode="decimal" placeholder="0.00" step="0.01" min="0" autocomplete="off" style="font:800 28px/1 'Nunito',sans-serif"></div>
-  </div>
-  <div class="ff">
-    <label class="flbl">Descripción</label>
-    <div class="ofield"><input id="etdesc" type="text" placeholder="¿En qué gastaste?" maxlength="60" autocomplete="off"></div>
-  </div>
-  <div class="ff">
-    <label class="flbl">Tipo</label>
-    <div class="seg">
-      <button class="sbtn act" data-etipo="Variable" onclick="setETipo('Variable')"><span class="ms">trending_down</span>Saldo</button>
-      <button class="sbtn" data-etipo="Ahorros" onclick="setETipo('Ahorros')"><span class="ms">savings</span>Ahorros</button>
-    </div>
-  </div>
-  <div class="ff">
-    <label class="flbl">Categoría</label>
-    <div class="cgrid" id="ecgrid"></div>
-  </div>
-  <button class="fbtn" id="etsbtn" onclick="confirmEditTxn()"><span class="ms">check_circle</span><span id="etslbl">Guardar cambios</span></button>
-</div>
-
-<!-- Edit global config dialog -->
-<div class="dscrim" id="ecdlg">
-  <div class="dlg">
-    <p class="dtitle" id="ectitle">Editar</p>
-    <p style="font:500 12px/18px 'Nunito',sans-serif;color:var(--on-surf-v);margin-bottom:16px;margin-top:-8px">Se guardará como valor por defecto para todos los meses.</p>
-    <div class="ff" style="margin-bottom:4px">
-      <label class="flbl">Nuevo valor</label>
-      <div class="ofield"><span class="pfx">S/</span><input id="eci" type="number" step="0.01" min="0" inputmode="decimal"></div>
-    </div>
-    <div class="dact">
-      <button class="tbtn" onclick="closeEC()">Cancelar</button>
-      <button class="tbtn" onclick="confirmEC()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<div class="snack" id="snack"></div>
-
-<script>
-const APP_PIN="1458"; // ← cambia esto a tu PIN de 4 dígitos
-
-let pinVal="";
-function pinKey(d){
-  if(pinVal.length>=4)return;
-  pinVal+=d;updDots();
-  if(pinVal.length===4)setTimeout(checkPin,80);
-}
-function pinDel(){pinVal=pinVal.slice(0,-1);updDots();}
-function updDots(){
-  for(let i=0;i<4;i++){const el=$("pd"+i);el.classList.toggle("fill",i<pinVal.length);el.classList.remove("err");}
-}
-function checkPin(){
-  if(pinVal===APP_PIN){
-    sessionStorage.setItem("unlocked","1");
-    $("lock").classList.add("h");
-  }else{
-    for(let i=0;i<4;i++)$("pd"+i).classList.add("err");
-    const dots=$("pin-dots");dots.classList.add("shake");
-    setTimeout(()=>{pinVal="";dots.classList.remove("shake");updDots();},500);
-  }
+function jsonResponse(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
-const CATS=[
-  {e:"🍝",l:"Comida",    v:"Comida y bebidas"},
-  {e:"🎉",l:"Diversión", v:"Diversión"},
-  {e:"🚌",l:"Transporte",v:"Transporte"},
-  {e:"🛒",l:"Neces.",    v:"Necesidades"},
-  {e:"🎁",l:"Regalos",   v:"Regalos"},
-  {e:"✨",l:"Gustos",    v:"Gustos"},
-  {e:"✈️",l:"Viajes",    v:"Viajes"},
-  {e:"📦",l:"Otros",     v:"Otros"},
-];
-const CC={
-  "Comida y bebidas":"#FF9800","Diversión":"#E91E63","Transporte":"#4CAF50",
-  "Necesidades":"#2196F3","Regalos":"#9C27B0","Gustos":"#FFC107",
-  "Viajes":"#00BCD4","Otros":"#9E9E9E",
-};
-
-// ── DEMO / MOCK DATA ──────────────────────────────────────────
-// April 2026 (last month) — simulated history
-const NOW=new Date();
-const PREV_MES=NOW.getMonth()===0?12:NOW.getMonth();
-const PREV_ANIO=NOW.getMonth()===0?NOW.getFullYear()-1:NOW.getFullYear();
-const NEXT_MES=NOW.getMonth()===11?1:NOW.getMonth()+2;
-const NEXT_ANIO=NOW.getMonth()===11?NOW.getFullYear()+1:NOW.getFullYear();
-
-const MOCK={};
-// Previous month mock — datos reales Abril
-const PM=n=>`${PREV_ANIO}-${String(PREV_MES).padStart(2,"0")}-${String(n).padStart(2,"0")}`;
-MOCK[`${PREV_ANIO}-${PREV_MES}`]={
-  ok:true,ingreso:10000,ahorro:1000,
-  gastosFijos:[
-    {nombre:"Casa+Spotify",  monto:491,   tipo:"Manual", pagado:true},
-    {nombre:"Margarita",     monto:120,   tipo:"Manual", pagado:true},
-    {nombre:"Depa",          monto:5000,  tipo:"Manual", pagado:true},
-    {nombre:"Impuestos mes pasado",monto:800,tipo:"Manual",pagado:true},
-    {nombre:"Seguro Salud",  monto:148,   tipo:"Manual", pagado:true},
-    {nombre:"Celular",       monto:32.90, tipo:"Débito", pagado:false},
-    {nombre:"AFP",           monto:500,   tipo:"Débito", pagado:false},
-    {nombre:"Seguro de tarjeta",monto:12.90,tipo:"Débito",pagado:false},
-  ],
-  totalFijos:7104.80,saldoDisponible:1895.20,
-  totalVariables:1894.09,totalDeAhorros:0,saldoRestante:1.11,
-  historial:[
-    {rowIndex:100,fecha:PM(1)+"T13:00:00", monto:22.20,  descripcion:"Regalo Omar",          tipoGasto:"Variable",categoria:"Gustos"},
-    {rowIndex:101,fecha:PM(2)+"T10:00:00", monto:93.60,  descripcion:"Shampoos",              tipoGasto:"Variable",categoria:"Necesidades"},
-    {rowIndex:102,fecha:PM(3)+"T21:00:00", monto:58.90,  descripcion:"Karaoke Omar",          tipoGasto:"Variable",categoria:"Diversión"},
-    {rowIndex:103,fecha:PM(4)+"T13:30:00", monto:27.37,  descripcion:"Xipe",                  tipoGasto:"Variable",categoria:"Comida y bebidas"},
-    {rowIndex:104,fecha:PM(4)+"T19:00:00", monto:52.00,  descripcion:"Cena Ondo",             tipoGasto:"Variable",categoria:"Comida y bebidas"},
-    {rowIndex:105,fecha:PM(5)+"T08:30:00", monto:23.90,  descripcion:"Taxis",                 tipoGasto:"Variable",categoria:"Transporte"},
-    {rowIndex:106,fecha:PM(5)+"T09:00:00", monto:6.40,   descripcion:"Taxi",                  tipoGasto:"Variable",categoria:"Transporte"},
-    {rowIndex:107,fecha:PM(6)+"T15:00:00", monto:23.00,  descripcion:"Playita",               tipoGasto:"Variable",categoria:"Diversión"},
-    {rowIndex:108,fecha:PM(7)+"T20:00:00", monto:78.80,  descripcion:"Carboncito",            tipoGasto:"Variable",categoria:"Gustos"},
-    {rowIndex:109,fecha:PM(8)+"T12:00:00", monto:18.00,  descripcion:"Regalo Valen",          tipoGasto:"Variable",categoria:"Gustos"},
-    {rowIndex:110,fecha:PM(9)+"T18:00:00", monto:81.00,  descripcion:"Taxis Cieneguella",     tipoGasto:"Variable",categoria:"Transporte"},
-    {rowIndex:111,fecha:PM(10)+"T11:00:00",monto:100.00, descripcion:"Compras Salaverry",     tipoGasto:"Variable",categoria:"Gustos"},
-    {rowIndex:112,fecha:PM(11)+"T14:00:00",monto:135.00, descripcion:"Chifa",                 tipoGasto:"Variable",categoria:"Comida y bebidas"},
-    {rowIndex:113,fecha:PM(11)+"T20:00:00",monto:25.00,  descripcion:"Taxis cumple Ale",      tipoGasto:"Variable",categoria:"Transporte"},
-    {rowIndex:114,fecha:PM(12)+"T13:00:00",monto:15.00,  descripcion:"Calavera",              tipoGasto:"Variable",categoria:"Comida y bebidas"},
-    {rowIndex:115,fecha:PM(12)+"T18:00:00",monto:28.00,  descripcion:"Xipe",                  tipoGasto:"Variable",categoria:"Comida y bebidas"},
-    {rowIndex:116,fecha:PM(13)+"T16:00:00",monto:322.00, descripcion:"Compras cumpleaños",    tipoGasto:"Variable",categoria:"Diversión"},
-    {rowIndex:117,fecha:PM(14)+"T09:00:00",monto:17.00,  descripcion:"Café Pukupuku",         tipoGasto:"Variable",categoria:"Comida y bebidas"},
-    {rowIndex:118,fecha:PM(14)+"T19:30:00",monto:158.00, descripcion:"Temu",                  tipoGasto:"Variable",categoria:"Gustos"},
-    {rowIndex:119,fecha:PM(15)+"T12:00:00",monto:27.00,  descripcion:"Regalo Ale",            tipoGasto:"Variable",categoria:"Gustos"}, // mapped Diversión→Gustos per image
-    {rowIndex:120,fecha:PM(16)+"T15:00:00",monto:25.00,  descripcion:"Regalo Alvarito",       tipoGasto:"Variable",categoria:"Gustos"},
-    {rowIndex:121,fecha:PM(17)+"T14:00:00",monto:33.00,  descripcion:"La Recontra",           tipoGasto:"Variable",categoria:"Comida y bebidas"},
-    {rowIndex:122,fecha:PM(18)+"T19:00:00",monto:56.80,  descripcion:"Bowling cumple Nico",   tipoGasto:"Variable",categoria:"Diversión"},
-    {rowIndex:123,fecha:PM(19)+"T21:00:00",monto:27.00,  descripcion:"Queirolo",              tipoGasto:"Variable",categoria:"Comida y bebidas"},
-    {rowIndex:124,fecha:PM(20)+"T08:30:00",monto:8.40,   descripcion:"Taxi ofis",             tipoGasto:"Variable",categoria:"Transporte"},
-    {rowIndex:125,fecha:PM(20)+"T12:00:00",monto:51.00,  descripcion:"Cumple KP",             tipoGasto:"Variable",categoria:"Diversión"},
-    {rowIndex:126,fecha:PM(21)+"T14:00:00",monto:29.90,  descripcion:"Xipe",                  tipoGasto:"Variable",categoria:"Comida y bebidas"},
-    {rowIndex:127,fecha:PM(22)+"T13:30:00",monto:127.00, descripcion:"Almuerzo Florencia",    tipoGasto:"Variable",categoria:"Comida y bebidas"},
-    {rowIndex:128,fecha:PM(23)+"T10:00:00",monto:22.00,  descripcion:"Puku Puku",             tipoGasto:"Variable",categoria:"Comida y bebidas"},
-    {rowIndex:129,fecha:PM(25)+"T07:00:00",monto:115.00, descripcion:"Bus Huacachina",        tipoGasto:"Variable",categoria:"Diversión"},
-    {rowIndex:130,fecha:PM(26)+"T16:00:00",monto:77.82,  descripcion:"Sostén",                tipoGasto:"Variable",categoria:"Necesidades"},
-    {rowIndex:131,fecha:PM(27)+"T14:00:00",monto:9.00,   descripcion:"Snacks Huacachina",     tipoGasto:"Variable",categoria:"Comida y bebidas"},
-  ]
-};
-// Current month mock — datos reales Mayo
-const CM=n=>`${NOW.getFullYear()}-${String(NOW.getMonth()+1).padStart(2,"0")}-${String(n).padStart(2,"0")}`;
-MOCK[`${NOW.getFullYear()}-${NOW.getMonth()+1}`]={
-  ok:true,ingreso:10000,ahorro:1500,
-  gastosFijos:[
-    {nombre:"Casa+Spotify",       monto:491,   tipo:"Manual", pagado:true},
-    {nombre:"Margarita",          monto:120,   tipo:"Manual", pagado:true},
-    {nombre:"Depa",               monto:5000,  tipo:"Manual", pagado:true},
-    {nombre:"Impuestos mes pasado",monto:800,  tipo:"Manual", pagado:true},
-    {nombre:"Seguro Salud",       monto:148,   tipo:"Manual", pagado:false},
-    {nombre:"Celular",            monto:32.90, tipo:"Débito", pagado:false},
-    {nombre:"AFP",                monto:500,   tipo:"Débito", pagado:false},
-    {nombre:"Seguro de tarjeta",  monto:12.90, tipo:"Débito", pagado:false},
-  ],
-  totalFijos:7104.80,saldoDisponible:1395.20,
-  totalVariables:1198.27,totalDeAhorros:1018.55,saldoRestante:196.93,
-  historial:[
-    {rowIndex:200,fecha:CM(1)+"T10:00:00", monto:617,   descripcion:"Renta anual 2025",      tipoGasto:"Ahorros",  categoria:"Necesidades"},
-    {rowIndex:201,fecha:CM(2)+"T13:00:00", monto:43,    descripcion:"Almuerzo amigas",        tipoGasto:"Variable", categoria:"Comida y bebidas"},
-    {rowIndex:202,fecha:CM(3)+"T11:00:00", monto:199,   descripcion:"Lámpara banker",         tipoGasto:"Variable", categoria:"Gustos"},
-    {rowIndex:203,fecha:CM(4)+"T16:00:00", monto:250,   descripcion:"Tattoo True Pink",       tipoGasto:"Ahorros",  categoria:"Gustos"},
-    {rowIndex:204,fecha:CM(5)+"T20:00:00", monto:61,    descripcion:"Coworking y cena",       tipoGasto:"Variable", categoria:"Comida y bebidas"},
-    {rowIndex:205,fecha:CM(6)+"T09:00:00", monto:6.67,  descripcion:"Basket",                 tipoGasto:"Variable", categoria:"Necesidades"},
-    {rowIndex:206,fecha:CM(6)+"T14:00:00", monto:15,    descripcion:"Compras Temu",           tipoGasto:"Variable", categoria:"Gustos"},
-    {rowIndex:207,fecha:CM(7)+"T12:00:00", monto:151.55,descripcion:"Wild Rover Huacachina",  tipoGasto:"Ahorros",  categoria:"Diversión"},
-    {rowIndex:208,fecha:CM(8)+"T15:00:00", monto:150,   descripcion:"Gastos Huacachina",      tipoGasto:"Variable", categoria:"Diversión"},
-    {rowIndex:209,fecha:CM(9)+"T10:00:00", monto:45,    descripcion:"Flores",                 tipoGasto:"Variable", categoria:"Gustos"},
-    {rowIndex:210,fecha:CM(10)+"T12:00:00",monto:159,   descripcion:"Regalo mamá",            tipoGasto:"Variable", categoria:"Gustos"},
-    {rowIndex:211,fecha:CM(11)+"T08:30:00",monto:150,   descripcion:"Gasolina",               tipoGasto:"Variable", categoria:"Transporte"},
-    {rowIndex:212,fecha:CM(12)+"T13:00:00",monto:5.60,  descripcion:"Gaseosas",               tipoGasto:"Variable", categoria:"Comida y bebidas"},
-    {rowIndex:213,fecha:CM(12)+"T16:00:00",monto:41,    descripcion:"Taxis La Herradura",     tipoGasto:"Variable", categoria:"Transporte"},
-    {rowIndex:214,fecha:CM(13)+"T10:00:00",monto:40,    descripcion:"Compras casa",           tipoGasto:"Variable", categoria:"Necesidades"},
-    {rowIndex:215,fecha:CM(13)+"T11:00:00",monto:10,    descripcion:"Pinzas",                 tipoGasto:"Variable", categoria:"Necesidades"},
-    {rowIndex:216,fecha:CM(14)+"T21:00:00",monto:55,    descripcion:"La Folie",               tipoGasto:"Variable", categoria:"Comida y bebidas"},
-    {rowIndex:217,fecha:CM(15)+"T13:30:00",monto:133,   descripcion:"Shimaya mama y nonna",   tipoGasto:"Variable", categoria:"Comida y bebidas"},
-    {rowIndex:218,fecha:CM(16)+"T14:00:00",monto:20,    descripcion:"Pollada tíos",           tipoGasto:"Variable", categoria:"Gustos"},
-    {rowIndex:219,fecha:CM(17)+"T20:00:00",monto:16,    descripcion:"TKTX",                   tipoGasto:"Variable", categoria:"Gustos"},
-    {rowIndex:220,fecha:CM(18)+"T09:30:00",monto:26,    descripcion:"Burrito y jugo",         tipoGasto:"Variable", categoria:"Comida y bebidas"},
-    {rowIndex:221,fecha:CM(19)+"T14:00:00",monto:23,    descripcion:"Burrito Bar",            tipoGasto:"Variable", categoria:"Comida y bebidas"},
-  ]
-};
-
-// ── API HELPER ─────────────────────────────────────────────────
-// DEMO_MODE=false → siempre usa mock data. Cambiar a false en producción.
-const DEMO_MODE=true;
-
-async function callApi(params){
-  const key=params.action==="get"
-    ?`${NOW.getFullYear()}-${NOW.getMonth()+1}`
-    :`${params.anio}-${params.mes}`;
-
-  if(!DEMO_MODE){
-    try{
-      const ctrl=new AbortController();
-      const tid=setTimeout(()=>ctrl.abort(),6000);
-      const r=await fetch(GAS_URL+"?"+new URLSearchParams({...params,t:Date.now()}),{signal:ctrl.signal});
-      clearTimeout(tid);
-      const d=await r.json();
-      if(d&&d.ok)return d;
-    }catch{}
-  }
-
-  if(MOCK[key])return MOCK[key];
-  const _tf=(DS.gastosFijos||[]).reduce((s,g)=>s+g.monto,0);
-  const _in=DS.ingreso||10000,_ah=DS.ahorro||1500,_disp=_in-_ah-_tf;
-  return{ok:true,ingreso:_in,ahorro:_ah,gastosFijos:DS.gastosFijos||[],totalFijos:_tf,saldoDisponible:_disp,totalVariables:0,totalDeAhorros:0,saldoRestante:_disp,historial:[]};
-}
-
-let DS={},sTipo="Variable",sCat="Comida y bebidas",formOpen=false;
-let histLoaded=false,penDel=null,months=[],selMes=null,ecCtx=null;
-let formMonthOff=0;
-let sFTipo="Manual",fjEditing=null,fjDelName=null;
-let penEdit=null,eTipo="Variable",eCat="Comida y bebidas";
-
-const $=id=>document.getElementById(id);
-function fmt(n){return "S/ "+Number(n||0).toLocaleString("es-PE",{minimumFractionDigits:2,maximumFractionDigits:2})}
-function fmtD(d){if(!d)return"";return new Date(d).toLocaleDateString("es-PE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}
-function mName(mes,anio){return new Date(anio,mes-1,1).toLocaleDateString("es-PE",{month:"long",year:"numeric"}).replace(/^\w/,c=>c.toUpperCase())}
-function mNameShort(mes,anio){return new Date(anio,mes-1,1).toLocaleDateString("es-PE",{month:"short"}).replace(/^\w/,c=>c.toUpperCase())}
-function curPage(){return $("pi").classList.contains("act")?"i":"h"}
-
-// ─── NAV ──────────────────────────────────────────────────────
-function showPage(p){
-  $("pi").classList.toggle("act",p==="i");
-  $("ph").classList.toggle("act",p==="h");
-}
-function goHistory(){
-  showPage("h");
-  if(!histLoaded){histLoaded=true;loadMonths();}
-}
-function goBack(){showPage("i")}
-
-// ─── DASHBOARD ────────────────────────────────────────────────
-async function loadData(){
-  const ls=$("ls"),es=$("es"),rb=$("rbtn");
-  const locked=!$("lock").classList.contains("h");
-  if(!locked){ls.classList.remove("h");es.classList.remove("v");}
-  rb.classList.add("spinning");
-  try{
-    const d=await callApi({action:"get"});
-    if(!d.ok)throw new Error(d.error||"Error");
-    DS=d;renderDash();
-    ls.classList.add("h");
-  }catch(e){
-    ls.classList.add("h");$("em").textContent=e.message;es.classList.add("v");
-  }finally{rb.classList.remove("spinning")}
-}
-
-function renderDash(){
-  const{ingreso,ahorro,gastosFijos,totalFijos,saldoDisponible,
-        totalVariables,totalDeAhorros,saldoRestante,historial}=DS;
-  const mn=NOW.toLocaleDateString("es-PE",{month:"long"}).replace(/^\w/,c=>c.toUpperCase());
-  $("month-lbl").textContent=mn;
-  $("year-lbl").textContent=NOW.getFullYear();
-
-  const h=$("ha");h.textContent=fmt(saldoRestante);h.className="hero-amt";
-  if(saldoRestante<0)h.classList.add("neg");
-  else if(saldoRestante<saldoDisponible*.2)h.classList.add("warn");
-
-  $("sd").textContent=fmt(saldoDisponible);
-  $("tv").textContent=fmt(totalVariables);
-  const pct=saldoDisponible>0?Math.min((totalVariables/saldoDisponible)*100,100):0;
-  const pf=$("pf");pf.style.width=pct.toFixed(1)+"%";
-  pf.className="prog-fill"+(pct>=90?" danger":pct>=65?" warn":"");
-  $("pct").textContent=pct.toFixed(0)+"% usado";
-
-  const mes=NOW.getMonth()+1,anio=NOW.getFullYear();
-  renderSum("i-sum",DS);
-
-  const varT=(historial||[]).filter(t=>t.tipoGasto!=="Ahorros");
-  const ahoT=(historial||[]).filter(t=>t.tipoGasto==="Ahorros");
-
-  $("i-txn-cnt").textContent=varT.length||"";
-  $("i-aho-cnt").textContent=ahoT.length||"";
-  $("i-aho-sub").textContent=fmt(totalDeAhorros)+" gastado";
-  renderAhoTxns("body-i-aho",ahoT,true,mes,anio);
-
-  $("i-tfijos").textContent=fmt(totalFijos);
-  const man=(gastosFijos||[]).filter(g=>g.tipo==="Manual");
-  const deb=(gastosFijos||[]).filter(g=>g.tipo==="Débito");
-  $("i-tman").textContent=fmt(man.reduce((s,g)=>s+g.monto,0));
-  $("i-tdeb").textContent=fmt(deb.reduce((s,g)=>s+g.monto,0));
-  renderFijos("body-i-man",man,mes,anio,true);
-  renderFijos("body-i-deb",deb,mes,anio,false);
-  renderPaidTag("ptag-i-man",man);
-  renderTxns("i-txns",varT,true,mes,anio);
-}
-
-// ─── RENDER HELPERS ───────────────────────────────────────────
-function renderSum(id,data){
-  const realAho=(data.ahorro||0)-(data.totalDeAhorros||0);
-  const ahoColor=realAho<0?'var(--err)':'var(--ter)';
-  $(id).innerHTML=`
-    <div class="sum-chip ed" onclick="openEC('ingreso',${data.ingreso})">
-      <span class="ms sum-edit" style="font-size:13px">edit</span>
-      <span class="sum-lbl">Ingreso</span>
-      <span class="sum-val inc">${fmt(data.ingreso)}</span>
-    </div>
-    <div class="sum-chip ed" onclick="openEC('ahorro',${data.ahorro})">
-      <span class="ms sum-edit" style="font-size:13px">edit</span>
-      <span class="sum-lbl">Ahorrando</span>
-      <div style="display:flex;align-items:baseline;gap:3px">
-        <span class="sum-val" style="color:${ahoColor}">${fmt(realAho)}</span>
-        <span style="font:500 11px/14px 'Nunito',sans-serif;color:var(--on-surf-v);white-space:nowrap">/${Number(data.ahorro||0).toLocaleString("es-PE",{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
-      </div>
-    </div>`;
-}
-
-function renderPaidTag(id,manuales){
-  const cnt=manuales.filter(g=>g.pagado).length,tot=manuales.length;
-  const el=$(id);
-  if(!tot){el.textContent="";el.className="paid-tag";return;}
-  el.textContent=`${cnt}/${tot} pagados`;
-  el.className="paid-tag"+(cnt===tot?" done":cnt>0?" some":"");
-}
-
-function renderFijos(id,items,mes,anio,showToggle){
-  if(!items.length){
-    $(id).innerHTML=`<div class="fr"><span class="fr-name" style="color:var(--on-surf-v)">Sin gastos en esta categoría</span></div>`;
-    return;
-  }
-  $(id).innerHTML=items.map(g=>{
-    const strike=g.pagado?"text-decoration:line-through;opacity:.55":"";
-    const tog=showToggle
-      ?`<button class="paid-btn" onclick="event.stopPropagation();toggleFijo('${g.nombre.replace(/'/g,"\\'")}',${g.pagado},${mes},${anio})">
-          <span class="ms" style="color:${g.pagado?"#2E7D32":"var(--outline)"}">${g.pagado?"check_box":"check_box_outline_blank"}</span>
-        </button>`
-      :"";
-    return`<div class="fr"><span class="fr-name" style="${strike}">${g.nombre}</span><span class="fr-amt">${fmt(g.monto)}</span>${tog}</div>`;
-  }).join("");
-}
-
-function renderAhoTxns(id,txns,allowDel,mes,anio){
-  if(!txns.length){
-    $(id).innerHTML=`<div class="fr"><span class="fr-name" style="color:var(--on-surf-v)">Sin gastos desde ahorros</span></div>`;
-    return;
-  }
-  $(id).innerHTML=txns.map(t=>{
-    const cat=CATS.find(c=>c.v===t.categoria)||CATS[7];
-    const desc=t.descripcion||t.categoria;
-    const del=allowDel
-      ?`<button class="paid-btn" onclick="event.stopPropagation();askDel(${t.rowIndex},'${desc.replace(/'/g,"\\'")}')"><span class="ms" style="font-size:18px;color:var(--err)">delete</span></button>`
-      :"";
-    return`<div class="fr">
-      <span style="font-size:20px">${cat.e}</span>
-      <span class="fr-name">${desc}<br><span style="font:500 11px/14px Nunito,sans-serif;color:var(--on-surf-v)">${cat.l} · ${fmtD(t.fecha)}</span></span>
-      <span class="fr-amt" style="color:var(--ter)">−${fmt(t.monto)}</span>
-      ${del}
-    </div>`;
-  }).join("");
-}
-
-function renderTxns(id,txns,allowDel,mes,anio){
-  const el=$(id);
-  if(!txns.length){
-    el.innerHTML=`<div class="empty"><span class="ms">receipt</span><p>Sin gastos este mes</p></div>`;
-    return;
-  }
-  el.innerHTML=txns.map(t=>{
-    const cat=CATS.find(c=>c.v===t.categoria)||CATS[7];
-    const col=CC[t.categoria]||"#9E9E9E";
-    const desc=t.descripcion||t.categoria;
-    const del=allowDel
-      ?`<button class="txn-del" onclick="event.stopPropagation();askDel(${t.rowIndex},'${desc.replace(/'/g,"\\'")}')"><span class="ms">delete</span></button>`
-      :"";
-    const edit=allowDel
-      ?`<button class="txn-edit" onclick="event.stopPropagation();openEditTxn(${t.rowIndex},${t.monto},'${desc.replace(/'/g,"\\'")}','${t.categoria}','${t.tipoGasto}')"><span class="ms">edit</span></button>`
-      :"";
-    // show other-month badge if fecha is in a different month
-    const fd=new Date(t.fecha);
-    const isOther=fd.getMonth()+1!==mes||fd.getFullYear()!==anio;
-    const badge=isOther?`<span class="txn-badge">${mNameShort(fd.getMonth()+1,fd.getFullYear())}</span>`:"";
-    return`<div class="txn-w" id="tw-${t.rowIndex}">
-      <div class="txn" onclick="togTxn(${t.rowIndex})">
-        <div class="li-icon" style="background:${col}22;font-size:20px">${cat.e}</div>
-        <div class="li-cnt">
-          <p class="li-hl">${desc}</p>
-          <p class="li-sub">${cat.l} · ${fmtD(t.fecha)}</p>
-        </div>
-        ${badge}
-        <span class="li-trail neg">−${fmt(t.monto)}</span>${edit}${del}
-      </div>
-    </div>`;
-  }).join("");
-}
-
-function togTxn(r){
-  const w=$("tw-"+r);if(!w)return;
-  const was=w.classList.contains("sd");
-  document.querySelectorAll(".txn-w.sd").forEach(x=>x.classList.remove("sd"));
-  if(!was)w.classList.add("sd");
-}
-
-function tog(hId,bId){
-  $(bId).classList.toggle("open");$(hId).classList.toggle("open");
-}
-
-// ─── EDIT TRANSACTION ─────────────────────────────────────────
-function openEditTxn(rowIndex,monto,desc,cat,tipo){
-  penEdit=rowIndex;
-  eTipo=tipo||"Variable";eCat=cat||"Comida y bebidas";
-  $("etamt").value=monto;$("etdesc").value=desc;
-  document.querySelectorAll("[data-etipo]").forEach(b=>b.classList.toggle("act",b.dataset.etipo===eTipo));
-  buildEGrid();
-  $("etsheet").classList.add("open");$("etscrim").classList.add("v");
-  setTimeout(()=>$("etamt").select(),350);
-}
-function closeEditTxn(){
-  penEdit=null;
-  $("etsheet").classList.remove("open");$("etscrim").classList.remove("v");
-}
-function buildEGrid(){
-  $("ecgrid").innerHTML=CATS.map(c=>`
-    <button class="cchip${c.v===eCat?" sel":""}" data-v="${c.v}" onclick="selECat('${c.v}')">
-      <span class="em">${c.e}</span><span class="cl">${c.l}</span>
-    </button>`).join("");
-}
-function selECat(v){eCat=v;document.querySelectorAll("#ecgrid .cchip").forEach(b=>b.classList.toggle("sel",b.dataset.v===v))}
-function setETipo(t){eTipo=t;document.querySelectorAll("[data-etipo]").forEach(b=>b.classList.toggle("act",b.dataset.etipo===t))}
-async function confirmEditTxn(){
-  const monto=parseFloat($("etamt").value);
-  if(!monto||monto<=0){snack("Ingresa un monto válido");return;}
-  const desc=$("etdesc").value.trim();
-  const row=penEdit;
-  const btn=$("etsbtn"),lbl=$("etslbl");
-  btn.disabled=true;btn.classList.add("ld");lbl.textContent="Guardando…";
-  try{
-    if(!DEMO_MODE){
-      const r=await fetch(GAS_URL+"?"+new URLSearchParams({action:"edittxn",rowIndex:row,monto,descripcion:desc,categoria:eCat,tipoGasto:eTipo}));
-      const d=await r.json();if(!d.ok)throw new Error(d.error);
+// ─── ROUTER ──────────────────────────────────────────────────
+// Todo va por doGet para evitar problemas de CORS.
+function doGet(e) {
+  var action = ((e.parameter && e.parameter.action) || "get").toLowerCase();
+  try {
+    switch (action) {
+      case "get":               return handleGet(e);
+      case "post":              return handlePost(e);
+      case "delete":            return handleDelete(e);
+      case "history":           return handleHistory(e);
+      case "months":            return handleMonths(e);
+      case "togglefijo":        return handleToggleFijo(e);
+      case "updatemonthconfig": return handleUpdateMonthConfig(e);
+      case "updateconfig":      return handleUpdateConfig(e);
+      case "addfijo":           return handleAddFijo(e);
+      case "editfijo":          return handleEditFijo(e);
+      case "deletefijo":        return handleDeleteFijo(e);
+      default:
+        return jsonResponse({ ok: false, error: "Acción no reconocida: " + action });
     }
-    // update MOCK historial
-    Object.keys(MOCK).forEach(k=>{
-      const h=MOCK[k].historial;
-      const i=h.findIndex(t=>t.rowIndex===row);
-      if(i>=0){
-        h[i]={...h[i],monto,descripcion:desc,categoria:eCat,tipoGasto:eTipo};
-        MOCK[k].totalVariables=h.filter(t=>t.tipoGasto!=="Ahorros").reduce((s,t)=>s+t.monto,0);
-        MOCK[k].totalDeAhorros=h.filter(t=>t.tipoGasto==="Ahorros").reduce((s,t)=>s+t.monto,0);
-        MOCK[k].saldoRestante=MOCK[k].saldoDisponible-MOCK[k].totalVariables;
+  } catch (err) {
+    return jsonResponse({ ok: false, error: err.message });
+  }
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────
+
+// Devuelve { ingreso, ahorro } para el mes dado.
+// Primero busca en "Config Mensual"; si no hay, usa la Config global.
+function getMonthConfig(ss, mes, anio) {
+  var key = anio + "-" + (mes < 10 ? "0" + mes : "" + mes);
+
+  var cfgMSheet = ss.getSheetByName(SHEET_CFG_MES);
+  if (cfgMSheet) {
+    var data = cfgMSheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === key) {
+        return { ingreso: Number(data[i][1]) || 0, ahorro: Number(data[i][2]) || 0 };
       }
+    }
+  }
+
+  var cfgSheet = ss.getSheetByName(SHEET_CONFIG);
+  var cfgData  = cfgSheet ? cfgSheet.getDataRange().getValues() : [];
+  return {
+    ingreso: cfgData.length > 1 ? Number(cfgData[1][1]) || 0 : 0,
+    ahorro:  cfgData.length > 2 ? Number(cfgData[2][1]) || 0 : 0
+  };
+}
+
+// Lee los gastos fijos de la pestaña Configuración.
+function getGastosFijos(ss) {
+  var cfgSheet = ss.getSheetByName(SHEET_CONFIG);
+  if (!cfgSheet) return [];
+  var cfgData = cfgSheet.getDataRange().getValues();
+  var result  = [];
+  for (var i = 5; i < cfgData.length; i++) {
+    var nombre = cfgData[i][0];
+    if (!nombre) break;
+    result.push({
+      nombre: nombre,
+      monto:  Number(cfgData[i][1]) || 0,
+      tipo:   cfgData[i][2] || "Manual"
     });
-    // update DS if in current month
-    if(DS.historial){
-      const i=DS.historial.findIndex(t=>t.rowIndex===row);
-      if(i>=0){
-        DS.historial[i]={...DS.historial[i],monto,descripcion:desc,categoria:eCat,tipoGasto:eTipo};
-        DS.totalVariables=DS.historial.filter(t=>t.tipoGasto!=="Ahorros").reduce((s,t)=>s+t.monto,0);
-        DS.totalDeAhorros=DS.historial.filter(t=>t.tipoGasto==="Ahorros").reduce((s,t)=>s+t.monto,0);
-        DS.saldoRestante=DS.saldoDisponible-DS.totalVariables;
-      }
-    }
-    closeEditTxn();
-    snack("Gasto actualizado");
-    curPage()==="h"&&selMes?await loadHist(selMes.mes,selMes.anio):await loadData();
-  }catch(e){snack("Error: "+e.message);}
-  finally{btn.disabled=false;btn.classList.remove("ld");lbl.textContent="Guardar cambios";}
-}
-
-// ─── FORM — MONTH SELECTOR ────────────────────────────────────
-function setFMon(off){
-  formMonthOff=off;
-  document.querySelectorAll(".mselbtn").forEach(b=>b.classList.toggle("act",parseInt(b.dataset.mo)===off));
-  const target=new Date(NOW.getFullYear(),NOW.getMonth()+off,1);
-  const pad=n=>String(n).padStart(2,"0");
-  const df=$("date-ff");
-  if(off===0){
-    df.style.display="none";
-    $("ftitle").textContent="Nuevo gasto";
-  }else{
-    df.style.display="block";
-    // for prev month default to last day, for next month default to 1st
-    const day=off<0?new Date(target.getFullYear(),target.getMonth()+1,0).getDate():1;
-    $("di").value=`${target.getFullYear()}-${pad(target.getMonth()+1)}-${pad(day)}`;
-    const mn=target.toLocaleDateString("es-PE",{month:"long",year:"numeric"}).replace(/^\w/,c=>c.toUpperCase());
-    $("ftitle").textContent="Nuevo gasto — "+mn;
   }
+  return result;
 }
 
-function openForm(){
-  const p=curPage();
-  const mff=$("month-ff"),df=$("date-ff");
-
-  if(p==="i"){
-    // inicio: show month selector, reset to current month
-    mff.style.display="block";
-    formMonthOff=0;
-    document.querySelectorAll(".mselbtn").forEach(b=>b.classList.toggle("act",parseInt(b.dataset.mo)===0));
-    // label the prev/next buttons with actual month names
-    $("msel-p").textContent=mNameShort(PREV_MES,PREV_ANIO);
-    $("msel-c").textContent="Este mes";
-    $("msel-n").textContent=mNameShort(NEXT_MES,NEXT_ANIO);
-    df.style.display="none";
-    $("ftitle").textContent="Nuevo gasto";
-  }else{
-    // historial: hide month selector, show date pre-filled to selected month
-    mff.style.display="none";
-    if(selMes){
-      df.style.display="block";
-      const m=selMes,pad=n=>String(n).padStart(2,"0");
-      const isCur=m.mes===NOW.getMonth()+1&&m.anio===NOW.getFullYear();
-      const day=isCur?NOW.getDate():1;
-      $("di").value=`${m.anio}-${pad(m.mes)}-${pad(day)}`;
-      $("ftitle").textContent="Nuevo gasto — "+mName(m.mes,m.anio);
-    }else{
-      df.style.display="none";
-      $("ftitle").textContent="Nuevo gasto";
+// Devuelve un objeto { "Nombre gasto": true } para los fijos marcados como pagados
+// en el mes/año indicado.
+function getFijosPagados(histData, mes, anio) {
+  var pagados = {};
+  for (var i = 1; i < histData.length; i++) {
+    var fila = histData[i];
+    if (!fila[0] || fila[3] !== "FijoPagado") continue;
+    var fecha = new Date(fila[0]);
+    if (fecha.getMonth() + 1 === mes && fecha.getFullYear() === anio) {
+      pagados[fila[2]] = true;
     }
   }
-
-  formOpen=true;
-  $("fsheet").classList.add("open");
-  $("scrim").classList.add("v");
-  buildGrid();
-  setTimeout(()=>$("ai").focus(),350);
+  return pagados;
 }
 
-function closeForm(){
-  formOpen=false;
-  $("fsheet").classList.remove("open");
-  $("scrim").classList.remove("v");
-}
-function resetForm(){
-  $("ai").value="";$("desc").value="";
-  sTipo="Variable";sCat="Comida y bebidas";setTipo("Variable");buildGrid();
-}
+// ─── GET: dashboard del mes actual ───────────────────────────
+function handleGet(e) {
+  var ss       = SpreadsheetApp.getActiveSpreadsheet();
+  var now      = new Date();
+  var mes      = now.getMonth() + 1;
+  var anio     = now.getFullYear();
 
-function buildGrid(){
-  $("cgrid").innerHTML=CATS.map(c=>`
-    <button class="cchip${c.v===sCat?" sel":""}" data-v="${c.v}" onclick="selCat('${c.v}')">
-      <span class="em">${c.e}</span><span class="cl">${c.l}</span>
-    </button>`).join("");
-}
-function selCat(v){sCat=v;document.querySelectorAll(".cchip").forEach(b=>b.classList.toggle("sel",b.dataset.v===v))}
-function setTipo(t){sTipo=t;document.querySelectorAll(".sbtn").forEach(b=>b.classList.toggle("act",b.dataset.tipo===t))}
+  var cfg          = getMonthConfig(ss, mes, anio);
+  var gastosFijos  = getGastosFijos(ss);
+  var totalFijos   = gastosFijos.reduce(function(s, g) { return s + g.monto; }, 0);
+  var saldoDisp    = cfg.ingreso - cfg.ahorro - totalFijos;
 
-async function submit(){
-  const monto=parseFloat($("ai").value);
-  if(!monto||monto<=0){snack("Ingresa un monto válido");$("ai").focus();return;}
-  const desc=$("desc").value.trim();
-  const btn=$("sbtn"),lbl=$("slbl");
-  btn.disabled=true;btn.classList.add("ld");lbl.textContent="Enviando…";
-  try{
-    const p=new URLSearchParams({action:"post",monto,descripcion:desc,tipoGasto:sTipo,categoria:sCat});
-    const pg=curPage();
-    if(pg==="i"&&formMonthOff!==0){
-      // cross-month from inicio: use the date set by month selector
-      const dv=$("di").value;if(dv)p.set("fecha",dv);
-    }else if(pg==="h"&&selMes){
-      const dv=$("di").value;if(dv)p.set("fecha",dv);
-    }
-    const r=await fetch(GAS_URL+"?"+p.toString());
-    const d=await r.json();
-    if(!d.ok)throw new Error(d.error||"Error");
-    snack("Gasto registrado");closeForm();resetForm();
-    pg==="h"&&selMes?await loadHist(selMes.mes,selMes.anio):await loadData();
-  }catch(e){
-    // demo mode: simulate success
-    snack("Gasto registrado (demo)");closeForm();resetForm();
-  }
-  finally{btn.disabled=false;btn.classList.remove("ld");lbl.textContent="Registrar gasto";}
-}
+  var histSheet = ss.getSheetByName(SHEET_HISTORIAL);
+  if (!histSheet) throw new Error("Pestaña '" + SHEET_HISTORIAL + "' no encontrada.");
 
-// ─── DELETE ───────────────────────────────────────────────────
-function askDel(row,desc){
-  fjDelName=null;penDel=row;
-  $("ddlg-title").textContent="¿Eliminar gasto?";
-  $("dbody").textContent=`¿Eliminar "${desc}"? No se puede deshacer.`;
-  $("ddlg").classList.add("v");
-}
-function closeDel(){penDel=null;fjDelName=null;$("ddlg").classList.remove("v")}
-async function confirmDel(){
-  if(fjDelName){
-    const nombre=fjDelName;closeDel();
-    const newFijos=(DS.gastosFijos||[]).filter(g=>g.nombre!==nombre);
-    if(!DEMO_MODE){
-      try{
-        const r=await fetch(GAS_URL+"?"+new URLSearchParams({action:"deletefijo",nombre}));
-        const d=await r.json();if(!d.ok)throw new Error(d.error);
-      }catch(e){snack("Error: "+e.message);return;}
-    }
-    applyFijoConfig(newFijos);
-    snack("Gasto fijo eliminado");
-    renderFijosManager();
-    return;
-  }
-  if(!penDel)return;const row=penDel;closeDel();
-  try{
-    const r=await fetch(GAS_URL+"?action=delete&rowIndex="+row);
-    const d=await r.json();if(!d.ok)throw new Error(d.error);
-    snack("Gasto eliminado");
-    curPage()==="h"&&selMes?await loadHist(selMes.mes,selMes.anio):await loadData();
-  }catch{snack("Eliminado (demo)");}
-}
+  var histData     = histSheet.getDataRange().getValues();
+  var fijosPagados = getFijosPagados(histData, mes, anio);
 
-// ─── TOGGLE FIJO ──────────────────────────────────────────────
-async function toggleFijo(nombre,cur,mes,anio){
-  try{
-    const r=await fetch(GAS_URL+"?"+new URLSearchParams({action:"togglefijo",nombre,mes,anio,paid:(!cur).toString()}));
-    const d=await r.json();if(!d.ok)throw new Error(d.error);
-    snack(cur?"Desmarcado":"Marcado como pagado");
-    curPage()==="h"&&selMes?await loadHist(selMes.mes,selMes.anio):await loadData();
-  }catch{snack(cur?"Desmarcado (demo)":"Marcado (demo)");}
-}
-
-// ─── EDIT CONFIG ──────────────────────────────────────────────
-function openEC(campo,val){
-  ecCtx={campo};
-  $("ectitle").textContent=campo==="ingreso"?"Ingreso por defecto":"Meta de ahorro";
-  $("eci").value=val;$("ecdlg").classList.add("v");
-  setTimeout(()=>$("eci").select(),100);
-}
-function closeEC(){ecCtx=null;$("ecdlg").classList.remove("v")}
-async function confirmEC(){
-  const val=parseFloat($("eci").value);
-  if(isNaN(val)||val<0){snack("Valor inválido");return;}
-  const ctx=ecCtx;closeEC();
-  if(!DEMO_MODE){
-    try{
-      const r=await fetch(GAS_URL+"?"+new URLSearchParams({action:"updateconfig",campo:ctx.campo,valor:val}));
-      const d=await r.json();if(!d.ok)throw new Error(d.error);
-    }catch(e){snack("Error: "+e.message);return;}
-  }
-  applyGlobalConfig(ctx.campo,val);
-  snack("Guardado como valor por defecto");
-}
-function applyGlobalConfig(campo,val){
-  if(campo==="ingreso")DS.ingreso=val; else DS.ahorro=val;
-  DS.saldoDisponible=DS.ingreso-DS.ahorro-DS.totalFijos;
-  DS.saldoRestante=DS.saldoDisponible-DS.totalVariables;
-  Object.keys(MOCK).forEach(k=>{
-    if(campo==="ingreso")MOCK[k].ingreso=val; else MOCK[k].ahorro=val;
-    MOCK[k].saldoDisponible=MOCK[k].ingreso-MOCK[k].ahorro-MOCK[k].totalFijos;
-    MOCK[k].saldoRestante=MOCK[k].saldoDisponible-MOCK[k].totalVariables;
+  gastosFijos = gastosFijos.map(function(g) {
+    return { nombre: g.nombre, monto: g.monto, tipo: g.tipo, pagado: !!fijosPagados[g.nombre] };
   });
-  if(curPage()==="i")renderDash();
-  else if(selMes)loadHist(selMes.mes,selMes.anio);
-}
 
-// ─── HISTORY ──────────────────────────────────────────────────
-async function loadMonths(){
-  // Show mock months immediately — no waiting for network
-  months=[
-    {mes:PREV_MES,anio:PREV_ANIO},
-    {mes:NOW.getMonth()+1,anio:NOW.getFullYear()},
-    {mes:NEXT_MES,anio:NEXT_ANIO},
-  ];
-  const cur=months.find(m=>m.mes===NOW.getMonth()+1&&m.anio===NOW.getFullYear())||months[0];
-  selMes=cur||null;
-  renderChips();
-  if(cur)loadHist(cur.mes,cur.anio);
-  // Try to merge real months from GAS in background (5s timeout)
-  try{
-    const ctrl=new AbortController();
-    const tid=setTimeout(()=>ctrl.abort(),5000);
-    const r=await fetch(GAS_URL+"?action=months&t="+Date.now(),{signal:ctrl.signal});
-    clearTimeout(tid);
-    const d=await r.json();
-    if(d&&d.ok&&d.months&&d.months.length){
-      d.months.forEach(gm=>{
-        if(!months.find(m=>m.mes===gm.mes&&m.anio===gm.anio))months.push(gm);
-      });
-      months.sort((a,b)=>b.anio!==a.anio?b.anio-a.anio:b.mes-a.mes);
-      renderChips();
-    }
-  }catch{}
-}
-
-function renderChips(){
-  $("mchips").innerHTML=months.map(m=>{
-    const sel=selMes&&m.mes===selMes.mes&&m.anio===selMes.anio;
-    return`<button class="mchip${sel?" sel":""}" onclick="pickMes(${m.mes},${m.anio})">${mName(m.mes,m.anio)}</button>`;
-  }).join("");
-}
-function pickMes(mes,anio){selMes={mes,anio};renderChips();loadHist(mes,anio);}
-
-async function loadHist(mes,anio){
-  $("h-content").style.display="none";
-  $("h-ph").style.display="block";
-  const mn=new Date(anio,mes-1,1).toLocaleDateString("es-PE",{month:"long"}).replace(/^\w/,c=>c.toUpperCase());
-  $("h-month-lbl").textContent=mn;
-  $("h-year-lbl").textContent=anio;
-  try{
-    const d=await callApi({action:"history",mes,anio});
-    if(!d.ok)throw new Error(d.error||"Error");
-
-    const ha=$("h-ha");ha.textContent=fmt(d.saldoRestante);ha.className="hero-amt";
-    if(d.saldoRestante<0)ha.classList.add("neg");
-    else if(d.saldoRestante<d.saldoDisponible*.2)ha.classList.add("warn");
-    $("h-sd").textContent=fmt(d.saldoDisponible);
-    $("h-tv").textContent=fmt(d.totalVariables);
-    const p=d.saldoDisponible>0?Math.min((d.totalVariables/d.saldoDisponible)*100,100):0;
-    const hpf=$("h-pf");hpf.style.width=p.toFixed(1)+"%";
-    hpf.className="prog-fill"+(p>=90?" danger":p>=65?" warn":"");
-    $("h-pct").textContent=p.toFixed(0)+"%";
-
-    renderSum("h-sum",d);
-    const varT=(d.historial||[]).filter(t=>t.tipoGasto!=="Ahorros");
-    const ahoT=(d.historial||[]).filter(t=>t.tipoGasto==="Ahorros");
-    $("h-txn-cnt").textContent=varT.length||"";
-    $("h-aho-cnt").textContent=ahoT.length||"";
-    $("h-aho-sub").textContent=fmt(d.totalDeAhorros)+" gastado";
-    renderAhoTxns("body-h-aho",ahoT,true,mes,anio);
-    $("h-tfijos").textContent=fmt(d.totalFijos);
-    const man=(d.gastosFijos||[]).filter(g=>g.tipo==="Manual");
-    const deb=(d.gastosFijos||[]).filter(g=>g.tipo==="Débito");
-    $("h-tman").textContent=fmt(man.reduce((s,g)=>s+g.monto,0));
-    $("h-tdeb").textContent=fmt(deb.reduce((s,g)=>s+g.monto,0));
-    renderFijos("body-h-man",man,mes,anio,true);
-    renderFijos("body-h-deb",deb,mes,anio,false);
-    renderPaidTag("ptag-h-man",man);
-    renderTxns("h-txns",varT,true,mes,anio);
-
-    $("h-content").style.display="";
-    $("h-ph").style.display="none";
-  }catch(e){
-    $("h-ph").innerHTML=`<span class="ms">error</span><p>${e.message}</p>`;
-    $("h-ph").style.display="block";
+  var totalVar = 0, totalAho = 0;
+  var historial = [];
+  for (var i = 1; i < histData.length; i++) {
+    var fila = histData[i];
+    if (!fila[0]) continue;
+    var tipo = fila[3] || "Variable";
+    if (tipo === "FijoPagado") continue;          // marcadores internos, ignorar
+    var fecha = new Date(fila[0]);
+    if (fecha.getMonth() + 1 !== mes || fecha.getFullYear() !== anio) continue;
+    var monto = Number(fila[1]) || 0;
+    historial.push({ rowIndex: i + 1, fecha: fila[0], monto: monto,
+                     descripcion: fila[2] || "", tipoGasto: tipo, categoria: fila[4] || "" });
+    if (tipo === "Ahorros") totalAho += monto; else totalVar += monto;
   }
-}
+  historial.sort(function(a, b) { return new Date(b.fecha) - new Date(a.fecha); });
 
-// ─── GASTOS FIJOS CONFIG ──────────────────────────────────────
-function openFijosManager(){
-  renderFijosManager();
-  $("fjsheet").classList.add("open");
-  $("fjscrim").classList.add("v");
-}
-function closeFijosManager(){
-  $("fjsheet").classList.remove("open");
-  $("fjscrim").classList.remove("v");
-}
-function renderFijosManager(){
-  const fijos=DS.gastosFijos||[];
-  const list=$("fj-list");
-  if(!fijos.length){
-    list.innerHTML=`<div style="padding:24px 16px;text-align:center;color:var(--on-surf-v);font:500 14px/20px Nunito,sans-serif">Sin gastos fijos configurados</div>`;
-    return;
-  }
-  list.innerHTML=fijos.map((g,i)=>`
-    <div class="fj-item">
-      <div style="flex:1;min-width:0">
-        <p style="font:600 14px/20px Nunito,sans-serif;color:var(--on-surf);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${g.nombre}</p>
-        <p style="font:500 12px/16px Nunito,sans-serif;color:var(--on-surf-v)">${fmt(g.monto)}</p>
-      </div>
-      <span class="fj-badge ${g.tipo==="Débito"?"deb":"man"}">${g.tipo||"Manual"}</span>
-      <button class="paid-btn" onclick="openFijoForm(${i})"><span class="ms" style="font-size:20px;color:var(--on-surf-v)">edit</span></button>
-      <button class="paid-btn" onclick="askFijoDel('${g.nombre.replace(/'/g,"\\'")}')"><span class="ms" style="font-size:20px;color:var(--err)">delete</span></button>
-    </div>`).join("");
-}
-function openFijoForm(idx){
-  if(idx===null){
-    fjEditing=null;
-    $("fj-dlg-title").textContent="Nuevo gasto fijo";
-    $("fj-nombre").value="";$("fj-monto").value="";
-    sFTipo="Manual";
-  }else{
-    fjEditing={...(DS.gastosFijos||[])[idx],_idx:idx};
-    $("fj-dlg-title").textContent="Editar gasto fijo";
-    $("fj-nombre").value=fjEditing.nombre;
-    $("fj-monto").value=fjEditing.monto;
-    sFTipo=fjEditing.tipo||"Manual";
-  }
-  document.querySelectorAll("[data-ftipo]").forEach(b=>b.classList.toggle("act",b.dataset.ftipo===sFTipo));
-  $("fjdlg").classList.add("v");
-  setTimeout(()=>$("fj-nombre").focus(),150);
-}
-function closeFijoDlg(){$("fjdlg").classList.remove("v")}
-function setFTipo(t){
-  sFTipo=t;
-  document.querySelectorAll("[data-ftipo]").forEach(b=>b.classList.toggle("act",b.dataset.ftipo===t));
-}
-async function confirmFijo(){
-  const nombre=$("fj-nombre").value.trim();
-  const monto=parseFloat($("fj-monto").value);
-  if(!nombre){snack("Ingresa un nombre");return;}
-  if(!monto||monto<=0){snack("Ingresa un monto válido");return;}
-  const btn=$("fj-save-btn");btn.disabled=true;
-  try{
-    let newFijos=[...(DS.gastosFijos||[])];
-    if(fjEditing){
-      newFijos[fjEditing._idx]={...newFijos[fjEditing._idx],nombre,monto,tipo:sFTipo};
-      if(!DEMO_MODE){
-        const r=await fetch(GAS_URL+"?"+new URLSearchParams({action:"editfijo",nombreOld:fjEditing.nombre,nombre,monto,tipo:sFTipo}));
-        const d=await r.json();if(!d.ok)throw new Error(d.error);
-      }
-      snack("Gasto fijo actualizado");
-    }else{
-      newFijos.push({nombre,monto,tipo:sFTipo,pagado:false});
-      if(!DEMO_MODE){
-        const r=await fetch(GAS_URL+"?"+new URLSearchParams({action:"addfijo",nombre,monto,tipo:sFTipo}));
-        const d=await r.json();if(!d.ok)throw new Error(d.error);
-      }
-      snack("Gasto fijo agregado");
-    }
-    closeFijoDlg();
-    applyFijoConfig(newFijos);
-    renderFijosManager();
-  }catch(e){snack("Error: "+e.message);}
-  finally{btn.disabled=false;}
-}
-function askFijoDel(nombre){
-  penDel=null;fjDelName=nombre;
-  $("ddlg-title").textContent="¿Eliminar gasto fijo?";
-  $("dbody").textContent=`¿Eliminar "${nombre}" de los gastos fijos? Se quitará de todos los meses futuros.`;
-  $("ddlg").classList.add("v");
-}
-function applyFijoConfig(newFijos){
-  DS.gastosFijos=newFijos;
-  const totalFijos=newFijos.reduce((s,g)=>s+g.monto,0);
-  DS.totalFijos=totalFijos;
-  DS.saldoDisponible=DS.ingreso-DS.ahorro-totalFijos;
-  DS.saldoRestante=DS.saldoDisponible-DS.totalVariables;
-  Object.keys(MOCK).forEach(k=>{
-    MOCK[k].gastosFijos=newFijos.map(g=>({...g,pagado:false}));
-    MOCK[k].totalFijos=totalFijos;
-    MOCK[k].saldoDisponible=MOCK[k].ingreso-MOCK[k].ahorro-totalFijos;
-    MOCK[k].saldoRestante=MOCK[k].saldoDisponible-MOCK[k].totalVariables;
+  return jsonResponse({
+    ok: true,
+    ingreso: cfg.ingreso, ahorro: cfg.ahorro,
+    gastosFijos: gastosFijos, totalFijos: totalFijos,
+    saldoDisponible: saldoDisp,
+    totalVariables: totalVar, totalDeAhorros: totalAho,
+    saldoRestante: saldoDisp - totalVar,
+    historial: historial
   });
-  if(curPage()==="i")renderDash();
-  else if(selMes)loadHist(selMes.mes,selMes.anio);
 }
 
-// ─── SNACKBAR ─────────────────────────────────────────────────
-let st;
-function snack(msg){
-  const el=$("snack");el.textContent=msg;el.classList.add("sh");
-  clearTimeout(st);st=setTimeout(()=>el.classList.remove("sh"),3000);
+// ─── POST: registrar nuevo gasto ─────────────────────────────
+function handlePost(e) {
+  var monto       = Number(e.parameter.monto);
+  var descripcion = e.parameter.descripcion || "";
+  var tipoGasto   = e.parameter.tipoGasto   || "Variable";
+  var categoria   = e.parameter.categoria   || "Otros";
+  var fechaParam  = e.parameter.fecha        || "";   // "YYYY-MM-DD" opcional
+
+  if (!monto || monto <= 0) throw new Error("Monto inválido.");
+
+  var ss        = SpreadsheetApp.getActiveSpreadsheet();
+  var histSheet = ss.getSheetByName(SHEET_HISTORIAL);
+  if (!histSheet) throw new Error("Pestaña '" + SHEET_HISTORIAL + "' no encontrada.");
+
+  var fechaStr;
+  if (fechaParam && fechaParam.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    var parts = fechaParam.split("-");
+    var d = new Date(
+      Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]),
+      new Date().getHours(), new Date().getMinutes(), 0
+    );
+    fechaStr = Utilities.formatDate(d, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+  } else {
+    fechaStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+  }
+
+  histSheet.appendRow([fechaStr, monto, descripcion, tipoGasto, categoria]);
+  return jsonResponse({ ok: true, mensaje: "Gasto registrado." });
 }
 
-window.addEventListener("scroll",()=>{
-  const b=$("top-bar");if(b)b.classList.toggle("sc",window.scrollY>4);
-});
+// ─── DELETE: eliminar fila por número de fila ─────────────────
+function handleDelete(e) {
+  var rowIndex = Number(e.parameter.rowIndex);
+  if (!rowIndex || rowIndex < 2) throw new Error("Índice de fila inválido.");
 
-if(sessionStorage.getItem("unlocked")==="1")$("lock").classList.add("h");
-loadData();
-</script>
-</body>
-</html>
+  var ss        = SpreadsheetApp.getActiveSpreadsheet();
+  var histSheet = ss.getSheetByName(SHEET_HISTORIAL);
+  if (!histSheet) throw new Error("Pestaña '" + SHEET_HISTORIAL + "' no encontrada.");
+
+  if (rowIndex > histSheet.getLastRow()) throw new Error("Fila no encontrada.");
+  histSheet.deleteRow(rowIndex);
+  return jsonResponse({ ok: true });
+}
+
+// ─── HISTORY: datos de un mes específico ─────────────────────
+function handleHistory(e) {
+  var mes  = Number(e.parameter.mes);
+  var anio = Number(e.parameter.anio);
+  if (!mes || !anio) throw new Error("Parámetros 'mes' y 'anio' requeridos.");
+
+  var ss          = SpreadsheetApp.getActiveSpreadsheet();
+  var cfg         = getMonthConfig(ss, mes, anio);
+  var gastosFijos = getGastosFijos(ss);
+  var totalFijos  = gastosFijos.reduce(function(s, g) { return s + g.monto; }, 0);
+  var saldoDisp   = cfg.ingreso - cfg.ahorro - totalFijos;
+
+  var histSheet = ss.getSheetByName(SHEET_HISTORIAL);
+  if (!histSheet) throw new Error("Pestaña '" + SHEET_HISTORIAL + "' no encontrada.");
+
+  var histData     = histSheet.getDataRange().getValues();
+  var fijosPagados = getFijosPagados(histData, mes, anio);
+
+  gastosFijos = gastosFijos.map(function(g) {
+    return { nombre: g.nombre, monto: g.monto, tipo: g.tipo, pagado: !!fijosPagados[g.nombre] };
+  });
+
+  var totalVar = 0, totalAho = 0;
+  var historial = [];
+  for (var i = 1; i < histData.length; i++) {
+    var fila = histData[i];
+    if (!fila[0]) continue;
+    var tipo = fila[3] || "Variable";
+    if (tipo === "FijoPagado") continue;
+    var fecha = new Date(fila[0]);
+    if (fecha.getMonth() + 1 !== mes || fecha.getFullYear() !== anio) continue;
+    var monto = Number(fila[1]) || 0;
+    historial.push({ rowIndex: i + 1, fecha: fila[0], monto: monto,
+                     descripcion: fila[2] || "", tipoGasto: tipo, categoria: fila[4] || "" });
+    if (tipo === "Ahorros") totalAho += monto; else totalVar += monto;
+  }
+  historial.sort(function(a, b) { return new Date(b.fecha) - new Date(a.fecha); });
+
+  return jsonResponse({
+    ok: true,
+    ingreso: cfg.ingreso, ahorro: cfg.ahorro,
+    gastosFijos: gastosFijos, totalFijos: totalFijos,
+    saldoDisponible: saldoDisp,
+    totalVariables: totalVar, totalDeAhorros: totalAho,
+    saldoRestante: saldoDisp - totalVar,
+    historial: historial
+  });
+}
+
+// ─── MONTHS: lista de meses disponibles ──────────────────────
+// Siempre incluye el mes actual + 2 meses siguientes (para registros anticipados).
+function handleMonths(e) {
+  var ss        = SpreadsheetApp.getActiveSpreadsheet();
+  var histSheet = ss.getSheetByName(SHEET_HISTORIAL);
+  var monthSet  = {};
+
+  // Mes actual y los dos siguientes
+  var now = new Date();
+  for (var offset = 0; offset <= 2; offset++) {
+    var d   = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    var m   = d.getMonth() + 1;
+    var a   = d.getFullYear();
+    var key = a + "-" + (m < 10 ? "0" + m : "" + m);
+    monthSet[key] = { mes: m, anio: a };
+  }
+
+  // Meses con datos en Historial
+  if (histSheet) {
+    var histData = histSheet.getDataRange().getValues();
+    for (var i = 1; i < histData.length; i++) {
+      var fila = histData[i];
+      if (!fila[0]) continue;
+      var fecha = new Date(fila[0]);
+      var m2    = fecha.getMonth() + 1;
+      var a2    = fecha.getFullYear();
+      var key2  = a2 + "-" + (m2 < 10 ? "0" + m2 : "" + m2);
+      monthSet[key2] = { mes: m2, anio: a2 };
+    }
+  }
+
+  var months = Object.keys(monthSet)
+    .sort(function(a, b) { return b.localeCompare(a); })
+    .map(function(k) { return monthSet[k]; });
+
+  return jsonResponse({ ok: true, months: months });
+}
+
+// ─── TOGGLE FIJO: marcar/desmarcar un gasto fijo como pagado ─
+function handleToggleFijo(e) {
+  var nombre = e.parameter.nombre;
+  var mes    = Number(e.parameter.mes);
+  var anio   = Number(e.parameter.anio);
+  var paid   = e.parameter.paid === "true";
+
+  if (!nombre || !mes || !anio) throw new Error("Parámetros incompletos.");
+
+  var ss        = SpreadsheetApp.getActiveSpreadsheet();
+  var histSheet = ss.getSheetByName(SHEET_HISTORIAL);
+  if (!histSheet) throw new Error("Pestaña '" + SHEET_HISTORIAL + "' no encontrada.");
+
+  var histData = histSheet.getDataRange().getValues();
+
+  if (paid) {
+    // Verificar si ya está marcado
+    for (var i = 1; i < histData.length; i++) {
+      var fila = histData[i];
+      if (fila[3] !== "FijoPagado" || fila[2] !== nombre) continue;
+      var f = new Date(fila[0]);
+      if (f.getMonth() + 1 === mes && f.getFullYear() === anio) {
+        return jsonResponse({ ok: true }); // ya estaba marcado
+      }
+    }
+    // Agregar fila marcadora (día 15 del mes para ordenamiento neutral)
+    var d = new Date(anio, mes - 1, 15);
+    var fechaStr = Utilities.formatDate(d, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+    histSheet.appendRow([fechaStr, 0, nombre, "FijoPagado", "Fijo"]);
+  } else {
+    // Buscar y eliminar (de abajo hacia arriba para que el índice no cambie)
+    for (var i = histData.length - 1; i >= 1; i--) {
+      var fila = histData[i];
+      if (fila[3] !== "FijoPagado" || fila[2] !== nombre) continue;
+      var f = new Date(fila[0]);
+      if (f.getMonth() + 1 === mes && f.getFullYear() === anio) {
+        histSheet.deleteRow(i + 1);
+        break;
+      }
+    }
+  }
+  return jsonResponse({ ok: true });
+}
+
+// ─── UPDATE MONTH CONFIG: editar ingreso/ahorro de un mes ────
+function handleUpdateMonthConfig(e) {
+  var mes   = Number(e.parameter.mes);
+  var anio  = Number(e.parameter.anio);
+  var campo = e.parameter.campo;   // "ingreso" | "ahorro"
+  var valor = Number(e.parameter.valor);
+
+  if (!mes || !anio || !campo || isNaN(valor) || valor < 0)
+    throw new Error("Parámetros inválidos.");
+
+  var ss  = SpreadsheetApp.getActiveSpreadsheet();
+  var key = anio + "-" + (mes < 10 ? "0" + mes : "" + mes);
+
+  // Crear hoja si no existe
+  var cfgMSheet = ss.getSheetByName(SHEET_CFG_MES);
+  if (!cfgMSheet) {
+    cfgMSheet = ss.insertSheet(SHEET_CFG_MES);
+    cfgMSheet.getRange(1, 1, 1, 3).setValues([["Mes", "Ingreso", "Ahorro"]]);
+    cfgMSheet.getRange("A1:C1").setFontWeight("bold").setBackground("#e8f0fe");
+    cfgMSheet.setColumnWidth(1, 100);
+    cfgMSheet.setColumnWidth(2, 120);
+    cfgMSheet.setColumnWidth(3, 120);
+  }
+
+  var data = cfgMSheet.getDataRange().getValues();
+
+  // Actualizar fila existente
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === key) {
+      if (campo === "ingreso") cfgMSheet.getRange(i + 1, 2).setValue(valor);
+      if (campo === "ahorro")  cfgMSheet.getRange(i + 1, 3).setValue(valor);
+      return jsonResponse({ ok: true });
+    }
+  }
+
+  // Crear nueva fila con defaults del mes y sobreescribir el campo
+  var globalCfg = getMonthConfig(ss, mes, anio);
+  var newRow = [key, globalCfg.ingreso, globalCfg.ahorro];
+  if (campo === "ingreso") newRow[1] = valor;
+  if (campo === "ahorro")  newRow[2] = valor;
+  cfgMSheet.appendRow(newRow);
+
+  return jsonResponse({ ok: true });
+}
+
+// ─── UPDATE GLOBAL CONFIG: ingreso / ahorro por defecto ──────
+function handleUpdateConfig(e) {
+  var campo = e.parameter.campo;
+  var valor = Number(e.parameter.valor);
+  if (!campo || isNaN(valor) || valor < 0) throw new Error("Parámetros inválidos.");
+  var ss       = SpreadsheetApp.getActiveSpreadsheet();
+  var cfgSheet = ss.getSheetByName(SHEET_CONFIG);
+  if (!cfgSheet) throw new Error("Hoja de Configuración no encontrada.");
+  if (campo === "ingreso") cfgSheet.getRange(2, 2).setValue(valor);
+  if (campo === "ahorro")  cfgSheet.getRange(3, 2).setValue(valor);
+  return jsonResponse({ ok: true });
+}
+
+// ─── ADD FIJO ─────────────────────────────────────────────────
+function handleAddFijo(e) {
+  var nombre = (e.parameter.nombre || "").trim();
+  var monto  = Number(e.parameter.monto);
+  var tipo   = e.parameter.tipo || "Manual";
+  if (!nombre || !monto || monto <= 0) throw new Error("Parámetros inválidos.");
+  var ss       = SpreadsheetApp.getActiveSpreadsheet();
+  var cfgSheet = ss.getSheetByName(SHEET_CONFIG);
+  if (!cfgSheet) throw new Error("Hoja de Configuración no encontrada.");
+  var lastRow = 5;
+  while (cfgSheet.getRange(lastRow + 1, 1).getValue()) lastRow++;
+  cfgSheet.getRange(lastRow + 1, 1).setValue(nombre);
+  cfgSheet.getRange(lastRow + 1, 2).setValue(monto);
+  cfgSheet.getRange(lastRow + 1, 3).setValue(tipo);
+  return jsonResponse({ ok: true });
+}
+
+// ─── EDIT FIJO ────────────────────────────────────────────────
+function handleEditFijo(e) {
+  var nombreOld = (e.parameter.nombreOld || "").trim();
+  var nombre    = (e.parameter.nombre    || "").trim();
+  var monto     = Number(e.parameter.monto);
+  var tipo      = e.parameter.tipo || "Manual";
+  if (!nombreOld || !nombre || !monto || monto <= 0) throw new Error("Parámetros inválidos.");
+  var ss       = SpreadsheetApp.getActiveSpreadsheet();
+  var cfgSheet = ss.getSheetByName(SHEET_CONFIG);
+  if (!cfgSheet) throw new Error("Hoja de Configuración no encontrada.");
+  var data = cfgSheet.getDataRange().getValues();
+  for (var i = 5; i < data.length; i++) {
+    if (String(data[i][0]) === nombreOld) {
+      cfgSheet.getRange(i + 1, 1).setValue(nombre);
+      cfgSheet.getRange(i + 1, 2).setValue(monto);
+      cfgSheet.getRange(i + 1, 3).setValue(tipo);
+      return jsonResponse({ ok: true });
+    }
+  }
+  throw new Error("Gasto fijo '" + nombreOld + "' no encontrado.");
+}
+
+// ─── DELETE FIJO ──────────────────────────────────────────────
+function handleDeleteFijo(e) {
+  var nombre = (e.parameter.nombre || "").trim();
+  if (!nombre) throw new Error("Nombre requerido.");
+  var ss       = SpreadsheetApp.getActiveSpreadsheet();
+  var cfgSheet = ss.getSheetByName(SHEET_CONFIG);
+  if (!cfgSheet) throw new Error("Hoja de Configuración no encontrada.");
+  var data = cfgSheet.getDataRange().getValues();
+  for (var i = data.length - 1; i >= 5; i--) {
+    if (String(data[i][0]) === nombre) {
+      cfgSheet.deleteRow(i + 1);
+      return jsonResponse({ ok: true });
+    }
+  }
+  throw new Error("Gasto fijo '" + nombre + "' no encontrado.");
+}
+
+// ─── INIT (ejecutar UNA VEZ desde el editor) ──────────────────
+function inicializarSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  var cfg = ss.getSheetByName(SHEET_CONFIG) || ss.insertSheet(SHEET_CONFIG);
+  cfg.clearContents();
+  cfg.getRange(1, 1).setValue("CONFIGURACIÓN MENSUAL");
+  cfg.getRange(2, 1, 2, 2).setValues([
+    ["Ingreso mensual", 2500],
+    ["Monto a ahorrar", 500]
+  ]);
+  cfg.getRange(5, 1, 1, 3).setValues([["GASTOS FIJOS", "Monto", "Tipo"]]);
+  cfg.getRange(6, 1, 5, 3).setValues([
+    ["Alquiler",      800, "Manual"],
+    ["Internet",       50, "Débito"],
+    ["Netflix",        15, "Débito"],
+    ["Seguro médico", 100, "Débito"],
+    ["Gimnasio",       40, "Manual"]
+  ]);
+  cfg.getRange("A1").setFontWeight("bold").setFontSize(12);
+  cfg.getRange("A5:C5").setFontWeight("bold").setBackground("#e8f0fe");
+  cfg.setColumnWidth(1, 200); cfg.setColumnWidth(2, 120); cfg.setColumnWidth(3, 120);
+
+  var hist = ss.getSheetByName(SHEET_HISTORIAL) || ss.insertSheet(SHEET_HISTORIAL);
+  hist.clearContents();
+  hist.getRange(1, 1, 1, 5).setValues([["Fecha", "Monto", "Descripción", "Tipo", "Categoría"]]);
+  hist.getRange("A1:E1").setFontWeight("bold").setBackground("#e8f0fe");
+  hist.setColumnWidth(1, 160); hist.setColumnWidth(2, 100);
+  hist.setColumnWidth(3, 200); hist.setColumnWidth(4, 100); hist.setColumnWidth(5, 140);
+
+  SpreadsheetApp.getUi().alert("✅ Estructura creada.\n\nEdita los valores en 'Configuración' antes de usar la app.");
+}
