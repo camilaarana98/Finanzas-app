@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#FAF8F6">
+<meta name="theme-color" content="#BF7587">
 <title>Mis Finanzas</title>
+<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<link rel="manifest" href="./manifest.json">
 <script>const GAS_URL="https://script.google.com/macros/s/AKfycbx5tv9NdzCwSXiAWW-AU_35Ml2Vp0dlwQUAJGoPf9zcbHFel4eY3kpE0JL14jm5I8xGsQ/exec";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap">
@@ -1480,6 +1482,30 @@ window.addEventListener("scroll",()=>{
 });
 
 if(sessionStorage.getItem("unlocked")==="1")$("lock").classList.add("h");
+
+// Generate apple-touch-icon for iOS home screen
+(function(){
+  try{
+    const c=document.createElement("canvas"),s=512,r=115;
+    c.width=c.height=s;const ctx=c.getContext("2d");
+    ctx.beginPath();
+    ctx.moveTo(r,0);ctx.lineTo(s-r,0);ctx.arcTo(s,0,s,r,r);
+    ctx.lineTo(s,s-r);ctx.arcTo(s,s,s-r,s,r);
+    ctx.lineTo(r,s);ctx.arcTo(0,s,0,s-r,r);
+    ctx.lineTo(0,r);ctx.arcTo(0,0,r,0,r);
+    ctx.closePath();
+    const g=ctx.createLinearGradient(0,0,s,s);
+    g.addColorStop(0,"#E68057");g.addColorStop(1,"#993A8B");
+    ctx.fillStyle=g;ctx.fill();
+    ctx.fillStyle="#fff";ctx.font="800 320px -apple-system,sans-serif";
+    ctx.textAlign="center";ctx.textBaseline="alphabetic";
+    ctx.fillText("F",256,375);
+    const l=document.createElement("link");
+    l.rel="apple-touch-icon";l.href=c.toDataURL("image/png");
+    document.head.appendChild(l);
+  }catch(e){}
+})();
+
 loadData();
 </script>
 </body>
