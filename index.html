@@ -821,8 +821,8 @@ MOCK[`${NOW.getFullYear()}-${NOW.getMonth()+1}`]={
 };
 
 // ── API HELPER ─────────────────────────────────────────────────
-// DEMO_MODE=false → siempre usa mock data. Cambiar a false en producción.
-const DEMO_MODE=true;
+// DEMO_MODE=true → usa datos de prueba. false → usa Google Sheets real.
+const DEMO_MODE=false;
 
 async function callApi(params){
   const key=params.action==="get"
@@ -830,14 +830,13 @@ async function callApi(params){
     :`${params.anio}-${params.mes}`;
 
   if(!DEMO_MODE){
-    try{
-      const ctrl=new AbortController();
-      const tid=setTimeout(()=>ctrl.abort(),6000);
-      const r=await fetch(GAS_URL+"?"+new URLSearchParams({...params,t:Date.now()}),{signal:ctrl.signal});
-      clearTimeout(tid);
-      const d=await r.json();
-      if(d&&d.ok)return d;
-    }catch{}
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),8000);
+    const r=await fetch(GAS_URL+"?"+new URLSearchParams({...params,t:Date.now()}),{signal:ctrl.signal});
+    clearTimeout(tid);
+    const d=await r.json();
+    if(d&&d.ok)return d;
+    throw new Error(d?.error||"Error del servidor");
   }
 
   if(MOCK[key])return MOCK[key];
@@ -907,8 +906,9 @@ function renderDash(){
   const mes=NOW.getMonth()+1,anio=NOW.getFullYear();
   renderSum("i-sum",DS);
 
-  const varT=(historial||[]).filter(t=>t.tipoGasto!=="Ahorros");
-  const ahoT=(historial||[]).filter(t=>t.tipoGasto==="Ahorros");
+  const sorted=[...(historial||[])].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+  const varT=sorted.filter(t=>t.tipoGasto!=="Ahorros");
+  const ahoT=sorted.filter(t=>t.tipoGasto==="Ahorros");
 
   $("i-txn-cnt").textContent=varT.length||"";
   $("i-aho-cnt").textContent=ahoT.length||"";
@@ -1340,8 +1340,9 @@ async function loadHist(mes,anio){
     $("h-pct").textContent=p.toFixed(0)+"%";
 
     renderSum("h-sum",d);
-    const varT=(d.historial||[]).filter(t=>t.tipoGasto!=="Ahorros");
-    const ahoT=(d.historial||[]).filter(t=>t.tipoGasto==="Ahorros");
+    const sorted=[...(d.historial||[])].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+    const varT=sorted.filter(t=>t.tipoGasto!=="Ahorros");
+    const ahoT=sorted.filter(t=>t.tipoGasto==="Ahorros");
     $("h-txn-cnt").textContent=varT.length||"";
     $("h-aho-cnt").textContent=ahoT.length||"";
     $("h-aho-sub").textContent=fmt(d.totalDeAhorros)+" gastado";
